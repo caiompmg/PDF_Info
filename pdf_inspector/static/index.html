@@ -100,7 +100,8 @@
     #save-btn { white-space: nowrap; }
     #save-status { padding: 0 14px; font-size: 12px; color: var(--muted); min-height: 1.2em; }
     #result {
-      flex: 1;
+      flex: 1 1 140px;
+      min-height: 100px;
       overflow: auto;
       margin: 0;
       padding: 14px;
@@ -128,6 +129,47 @@
       border: 1px solid rgba(0,0,0,0.25);
     }
     .hint { color: var(--muted); }
+
+    /* Navegador de padrões salvos (palette.json) */
+    #palette-panel { flex: 0 0 auto; border-top: 1px solid var(--border); display: flex; flex-direction: column; min-height: 0; max-height: 42%; }
+    #palette-panel .panel-head { flex-shrink: 0; }
+    #palette-panel .panel-head button { font-size: 12px; padding: 4px 9px; }
+    #palette-list { flex: 1; overflow: auto; padding: 6px 14px 12px; }
+    .palette-group-heading {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+      margin: 10px 0 4px;
+    }
+    .palette-group-heading:first-child { margin-top: 0; }
+    .palette-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 3px 0;
+      font-size: 12.5px;
+      cursor: pointer;
+    }
+    .palette-row input[type="checkbox"] { flex-shrink: 0; }
+    .palette-row .chip {
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+      border: 1px solid rgba(0,0,0,0.25);
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 7px;
+      font-weight: 700;
+      color: #fff;
+      background: #9aa1ac;
+    }
+    .palette-row .row-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .palette-row .row-meta { color: var(--muted); font-size: 10.5px; flex-shrink: 0; }
+    #palette-empty { color: var(--muted); font-size: 12px; padding: 4px 0; }
   </style>
 </head>
 <body>
@@ -176,6 +218,16 @@ amostrada no ponto clicado.
 Escolha uma categoria (H1, H2, STF, STJ,
 TST) e clique em Salvar para gravar esse
 padrão em palette.json.</pre>
+
+      <div id="palette-panel">
+        <div class="panel-head">
+          <h2>Padrões salvos</h2>
+          <button id="delete-selected-btn" disabled>Excluir selecionados</button>
+        </div>
+        <div id="palette-list">
+          <p id="palette-empty" class="hint">Nenhum padrão salvo ainda.</p>
+        </div>
+      </div>
     </aside>
   </main>
   <script src="/static/inspector.js"></script>

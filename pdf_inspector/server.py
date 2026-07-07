@@ -24,6 +24,7 @@ import subprocess
 import sys
 import uuid
 from collections import Counter
+from datetime import datetime, timezone
 from io import BytesIO
 from pathlib import Path
 
@@ -74,9 +75,12 @@ SESSIONS: dict[str, dict] = {}
 def load_palette() -> list[dict]:
     """Carrega o palette.json de trabalho (sempre o desta pasta).
 
-    Cada entrada tem "name", "category" (uma de CATEGORIES) e "type"
-    ("image", com "hash", ou "color", com "rgb"). Formato inválido é
-    ignorado sem erro (arquivo começa vazio na primeira vez).
+    Cada entrada tem "id" (identificador estável, para selecionar/excluir),
+    "name", "category" (uma de CATEGORIES) e "type" ("image", com "hash",
+    ou "color", com "rgb"). Formato inválido é ignorado sem erro (arquivo
+    começa vazio na primeira vez). Entradas antigas sem "id" (ex.: as
+    curadas manualmente) ganham um id na primeira leitura, gravado de volta
+    no arquivo para ficar estável dali em diante.
     """
     if not PALETTE_PATH.is_file():
         return []
@@ -84,7 +88,16 @@ def load_palette() -> list[dict]:
         data = json.loads(PALETTE_PATH.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
         return []
-    return data if isinstance(data, list) else []
+    if not isinstance(data, list):
+        return []
+    missing_id = False
+    for entry in data:
+        if "id" not in entry:
+            entry["id"] = uuid.uuid4().hex[:12]
+            missing_id = True
+    if missing_id:
+        save_palette(data)
+    return data
 
 
 def save_palette(entries: list[dict]) -> None:
@@ -342,12 +355,14 @@ def save_entry(page_number):
 
     result = inspect_region(doc, page, target, dpi)
     added = []
+    now = datetime.now(timezone.utc).isoformat(timespec="seconds")
 
     for image in result["frame"]:
         already = any(e.get("category") == category and e.get("hash") == image["hash"] for e in PALETTE)
         if already:
             continue
         entry = {
+            "id": uuid.uuid4().hex[:12],
             "name": f"{category}_frame_{len(PALETTE) + len(added) + 1}",
             "category": category,
             "type": "image",
@@ -355,6 +370,7 @@ def save_entry(page_number):
             "size_ref": [image["width"], image["height"]],
             "source_pdf": filename,
             "page": page_number,
+            "created_at": now,
         }
         PALETTE.append(entry)
         added.append(entry)
@@ -370,12 +386,14 @@ def save_entry(page_number):
         )
         if not already:
             entry = {
+                "id": uuid.uuid4().hex[:12],
                 "name": f"{category}_fill_{len(PALETTE) + len(added) + 1}",
                 "category": category,
                 "type": "color",
                 "rgb": fill_color["rgb"],
                 "source_pdf": filename,
                 "page": page_number,
+                "created_at": now,
             }
             PALETTE.append(entry)
             added.append(entry)
@@ -384,6 +402,28 @@ def save_entry(page_number):
         save_palette(PALETTE)
 
     return jsonify({"added": added, "already_existed": not added})
+
+
+@app.get("/palette")
+def get_palette():
+    """Lista todas as entradas salvas, para o navegador de padrões do
+    painel lateral (agrupar por categoria, ordenar por created_at)."""
+    return jsonify({"entries": PALETTE})
+
+
+@app.post("/palette/delete")
+def delete_palette_entries():
+    body = request.get_json(silent=True) or {}
+    ids = body.get("ids")
+    if not isinstance(ids, list) or not ids:
+        abort(400, description="Informe 'ids' (lista de identificadores a excluir).")
+    ids = set(ids)
+    before = len(PALETTE)
+    PALETTE[:] = [entry for entry in PALETTE if entry.get("id") not in ids]
+    removed = before - len(PALETTE)
+    if removed:
+        save_palette(PALETTE)
+    return jsonify({"removed": removed, "remaining": len(PALETTE)})
 
 
 @app.errorhandler(400)

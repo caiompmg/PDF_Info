@@ -17,6 +17,14 @@ const copyBtn = document.getElementById("copy-btn");
 const categorySelect = document.getElementById("category-select");
 const saveBtn = document.getElementById("save-btn");
 const saveStatusEl = document.getElementById("save-status");
+const paletteListEl = document.getElementById("palette-list");
+const paletteEmptyEl = document.getElementById("palette-empty");
+const deleteSelectedBtn = document.getElementById("delete-selected-btn");
+
+// Ordem de exibição dos grupos; categorias fora dessa lista (entradas
+// curadas sem "category") caem no grupo "Sem categoria", ao final.
+const CATEGORY_ORDER = ["H1", "H2", "STF", "STJ", "TST"];
+const UNCATEGORIZED_LABEL = "Sem categoria";
 
 const state = {
   sessionId: null,
@@ -247,11 +255,117 @@ async function saveEntry() {
       ? `Esse padrão já estava salvo em ${category}.`
       : `Salvo em ${category}: ${data.added.length} entrada(s) nova(s) em palette.json.`;
     saveStatusEl.style.color = "var(--ok)";
+    await loadPaletteBrowser();
   } catch (err) {
     saveStatusEl.textContent = `Falha ao salvar: ${err.message}`;
     saveStatusEl.style.color = "#c92a2a";
   } finally {
     saveBtn.disabled = false;
+  }
+}
+
+// --- Navegador de padrões salvos (palette.json) ---
+
+function groupPaletteEntries(entries) {
+  const groups = new Map();
+  for (const entry of entries) {
+    const key = entry.category || UNCATEGORIZED_LABEL;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(entry);
+  }
+  for (const list of groups.values()) {
+    // Ordem de criação: entradas sem created_at (curadas manualmente) vêm
+    // primeiro, depois por data crescente.
+    list.sort((a, b) => (a.created_at || "").localeCompare(b.created_at || ""));
+  }
+  const orderedKeys = [
+    ...CATEGORY_ORDER.filter((k) => groups.has(k)),
+    ...[...groups.keys()].filter((k) => !CATEGORY_ORDER.includes(k)),
+  ];
+  return orderedKeys.map((key) => [key, groups.get(key)]);
+}
+
+function paletteRowLabel(entry) {
+  const when = entry.created_at ? entry.created_at.replace("T", " ").slice(0, 16) : "sem data";
+  return `${entry.name} · ${when}`;
+}
+
+function renderPaletteBrowser(entries) {
+  paletteListEl.querySelectorAll(".palette-group-heading, .palette-row").forEach((el) => el.remove());
+  paletteEmptyEl.style.display = entries.length ? "none" : "block";
+
+  for (const [groupKey, groupEntries] of groupPaletteEntries(entries)) {
+    const heading = document.createElement("div");
+    heading.className = "palette-group-heading";
+    heading.textContent = `${groupKey} (${groupEntries.length})`;
+    paletteListEl.appendChild(heading);
+
+    for (const entry of groupEntries) {
+      const row = document.createElement("label");
+      row.className = "palette-row";
+
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.value = entry.id;
+      checkbox.addEventListener("change", updateDeleteButtonState);
+      row.appendChild(checkbox);
+
+      const chip = document.createElement("span");
+      chip.className = "chip";
+      if (entry.type === "color" && entry.rgb) {
+        chip.style.background = `rgb(${entry.rgb.map((v) => Math.round(v * 255)).join(",")})`;
+      } else {
+        chip.textContent = "IMG";
+      }
+      row.appendChild(chip);
+
+      const text = document.createElement("span");
+      text.className = "row-text";
+      text.textContent = paletteRowLabel(entry);
+      text.title = entry.name;
+      row.appendChild(text);
+
+      const meta = document.createElement("span");
+      meta.className = "row-meta";
+      meta.textContent = entry.type === "color" ? "cor" : "img";
+      row.appendChild(meta);
+
+      paletteListEl.appendChild(row);
+    }
+  }
+}
+
+function updateDeleteButtonState() {
+  const anyChecked = paletteListEl.querySelector('input[type="checkbox"]:checked') !== null;
+  deleteSelectedBtn.disabled = !anyChecked;
+}
+
+async function loadPaletteBrowser() {
+  try {
+    const data = await fetchJson("/palette");
+    renderPaletteBrowser(data.entries || []);
+    updateDeleteButtonState();
+  } catch (err) {
+    paletteEmptyEl.textContent = `Falha ao carregar padrões salvos: ${err.message}`;
+    paletteEmptyEl.style.display = "block";
+  }
+}
+
+async function deleteSelectedEntries() {
+  const ids = [...paletteListEl.querySelectorAll('input[type="checkbox"]:checked')].map((cb) => cb.value);
+  if (ids.length === 0) return;
+  if (!window.confirm(`Excluir ${ids.length} padrão(ões) selecionado(s) de palette.json?`)) return;
+  deleteSelectedBtn.disabled = true;
+  try {
+    await fetchJson("/palette/delete", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ids }),
+    });
+    await loadPaletteBrowser();
+  } catch (err) {
+    window.alert(`Falha ao excluir: ${err.message}`);
+    deleteSelectedBtn.disabled = false;
   }
 }
 
@@ -270,6 +384,7 @@ dpiSelect.addEventListener("change", () => {
 });
 
 saveBtn.addEventListener("click", saveEntry);
+deleteSelectedBtn.addEventListener("click", deleteSelectedEntries);
 
 copyBtn.addEventListener("click", async () => {
   if (!state.lastJson) return;
@@ -288,3 +403,5 @@ copyBtn.addEventListener("click", async () => {
   }
   setTimeout(() => { copyBtn.textContent = "Copiar JSON"; }, 1500);
 });
+
+loadPaletteBrowser();
