@@ -12,7 +12,7 @@
       594.5,
       49.3
     ],
-    "id": "2bbca2266aff"
+    "id": "8ed7c5754127"
   },
   {
     "name": "header_overlay",
@@ -27,7 +27,7 @@
       462.4,
       41.0
     ],
-    "id": "392884e2a4ad"
+    "id": "59aa350f0cf0"
   },
   {
     "name": "jurisprudencia_stj_etiqueta_base",
@@ -40,7 +40,7 @@
       84,
       35
     ],
-    "id": "a080218dde57"
+    "id": "ccba22cd885d"
   },
   {
     "name": "jurisprudencia_stj_etiqueta_corpo",
@@ -53,7 +53,7 @@
       46,
       67
     ],
-    "id": "9f69d678a17f"
+    "id": "55836f9c1c31"
   },
   {
     "name": "jurisprudencia_stj_etiqueta_texto",
@@ -66,7 +66,7 @@
       58,
       67
     ],
-    "id": "1e6037f31d27"
+    "id": "ecd420c7edfd"
   },
   {
     "name": "jurisprudencia_marca_fechamento",
@@ -79,6 +79,806 @@
       26,
       120
     ],
-    "id": "15b59503076b"
+    "id": "ed0cb53efce3"
+  },
+  {
+    "name": "H1_frame_7",
+    "category": "H1",
+    "type": "image",
+    "hash": "7881e26cab96a03a0f24f0e2e31433ca17d0eb4da1d7081d08b4d8f6b5cbe4a4",
+    "size_ref": [
+      150,
+      9
+    ],
+    "source_pdf": "Aula 06 - PDFULL - Processo Civil - Competência - Parte 2.pdf",
+    "page": 6,
+    "id": "225ee232db08"
+  },
+  {
+    "name": "H1_frame_9",
+    "category": "H1",
+    "type": "image",
+    "hash": "b79c871d6ad3576238814f0cee938b5104c804900d80fb37d598e99f1cbdbe1a",
+    "size_ref": [
+      150,
+      10
+    ],
+    "source_pdf": "Aula 06 - PDFULL - Processo Civil - Competência - Parte 2.pdf",
+    "page": 6,
+    "id": "636d4f1e22d4"
+  },
+  {
+    "name": "H1_frame_11",
+    "category": "H1",
+    "type": "image",
+    "hash": "c8074f10cc347b1314fc1b361cf47260910a6378641e48ba6c1aaad71bc19ce5",
+    "size_ref": [
+      139,
+      106
+    ],
+    "source_pdf": "Aula 06 - PDFULL - Processo Civil - Competência - Parte 2.pdf",
+    "page": 6,
+    "id": "aca5a17bee83"
+  },
+  {
+    "name": "H2_frame_11",
+    "category": "H2",
+    "type": "image",
+    "hash": "d6b1ece6afe514e1b613ce2018e98c802f782820d47c1383bb43da34ecb7dc1e",
+    "size_ref": [
+      684,
+      64
+    ],
+    "source_pdf": "Aula 06 - PDFULL - Processo Civil - Competência - Parte 2.pdf",
+    "page": 6,
+    "id": "5a4c27e29f5f"
+  },
+  {
+    "name": "H2_frame_13",
+    "category": "H2",
+    "type": "image",
+    "hash": "6b6f98575fe5a5675e4adb8cc71e05f7503e62c6bc99c3f219cf351abd6dd576",
+    "size_ref": [
+      2,
+      2
+    ],
+    "source_pdf": "Aula 06 - PDFULL - Processo Civil - Competência - Parte 2.pdf",
+    "page": 6,
+    "id": "5bb64d4ccdaf"
+  },
+  {
+    "name": "STJ_fill_13",
+    "category": "STJ",
+    "type": "color",
+    "rgb": [
+      0.98,
+      0.89,
+      0.831
+    ],
+    "source_pdf": "Aula 06 - PDFULL - Processo Civil - Competência - Parte 2.pdf",
+    "page": 6,
+    "id": "5d23b7263606"
+  },
+  {
+    "name": "STF_fill_14",
+    "category": "STF",
+    "type": "color",
+    "rgb": [
+      0.871,
+      0.918,
+      0.965
+    ],
+    "source_pdf": "Aula 06 - PDFULL - Processo Civil - Competência - Parte 2.pdf",
+    "page": 7,
+    "id": "018770cdf4ad"
+  },
+  {
+    "name": "STJ_frame_15",
+    "category": "STJ",
+    "type": "image",
+    "hash": "d6b1ece6afe514e1b613ce2018e98c802f782820d47c1383bb43da34ecb7dc1e",
+    "size_ref": [
+      684,
+      64
+    ],
+    "source_pdf": "Aula 06 - PDFULL - Processo Civil - Competência - Parte 2.pdf",
+    "page": 19,
+    "id": "71df84812082"
+  },
+  {
+    "name": "STJ_frame_17",
+    "category": "STJ",
+    "type": "image",
+    "hash": "0589334463f7b5e98d5974d2ffe3a9a190f366d103f6f281d664c59128f35503",
+    "size_ref": [
+      795,
+      80
+    ],
+    "source_pdf": "Aula 06 - PDFULL - Processo Civil - Competência - Parte 2.pdf",
+    "page": 19,
+    "id": "f84a2f120124"
+  },
+  {
+    "name": "STJ_fill_19",
+    "category": "STJ",
+    "type": "color",
+    "rgb": [
+      0.878,
+      0.71,
+      0.302
+    ],
+    "source_pdf": "Aula 06 - PDFULL - Processo Civil - Competência - Parte 2.pdf",
+    "page": 19,
+    "id": "1c10bfedc4a2"
+  },
+  {
+    "name": "H1_frame_18",
+    "category": "H1",
+    "type": "image",
+    "hash": "2a89bdb3bf104af2154a2c70bdffb265993454b5fbd5c30f3eebc588674e4e29",
+    "size_ref": [
+      200,
+      153
+    ],
+    "source_pdf": "Aula 05 - PDFULL - Direito Civil - Teoria Geral do Negócio Jurídico.pdf",
+    "page": 13,
+    "id": "697dc6af110d"
+  },
+  {
+    "name": "H1_frame_20",
+    "category": "H1",
+    "type": "image",
+    "hash": "22f17d81942ec92369f66ef3f1b0706f0b3670cee7a4fd1ee52e473a1ecca0b0",
+    "size_ref": [
+      307,
+      20
+    ],
+    "source_pdf": "Aula 05 - PDFULL - Direito Civil - Teoria Geral do Negócio Jurídico.pdf",
+    "page": 13,
+    "id": "5e36f77dd805"
+  },
+  {
+    "name": "H1_frame_22",
+    "category": "H1",
+    "type": "image",
+    "hash": "b43023d7c9d5738e1438dd3d06cb9b76305624d59fb8a25bd9d73bceafbc5f7b",
+    "size_ref": [
+      149,
+      20
+    ],
+    "source_pdf": "Aula 05 - PDFULL - Direito Civil - Teoria Geral do Negócio Jurídico.pdf",
+    "page": 13,
+    "id": "56aaa5c49c30"
+  },
+  {
+    "name": "STJ_frame_21",
+    "category": "STJ",
+    "type": "image",
+    "hash": "a22e5c62a6f3c0c4a7185db3717d428043b4b54c78ccc4815d11ab609b6ce356",
+    "size_ref": [
+      84,
+      35
+    ],
+    "source_pdf": "Aula 05 - PDFULL - Direito Civil - Teoria Geral do Negócio Jurídico.pdf",
+    "page": 21,
+    "id": "c3975a421fd1"
+  },
+  {
+    "name": "STJ_frame_23",
+    "category": "STJ",
+    "type": "image",
+    "hash": "9e43abda7fe36f78f39c52a8537ad79854e0e0012a4662df28f2b869f7ba94b8",
+    "size_ref": [
+      46,
+      67
+    ],
+    "source_pdf": "Aula 05 - PDFULL - Direito Civil - Teoria Geral do Negócio Jurídico.pdf",
+    "page": 21,
+    "id": "265ef2d1a824"
+  },
+  {
+    "name": "STJ_frame_25",
+    "category": "STJ",
+    "type": "image",
+    "hash": "84ea597d20d3ac4873dea2315b3357310cae1b66e994bb8d7a91dc3de3153ad4",
+    "size_ref": [
+      58,
+      67
+    ],
+    "source_pdf": "Aula 05 - PDFULL - Direito Civil - Teoria Geral do Negócio Jurídico.pdf",
+    "page": 21,
+    "id": "aaec4e1a7973"
+  },
+  {
+    "name": "STJ_frame_27",
+    "category": "STJ",
+    "type": "image",
+    "hash": "c50aba8efccfe6bf206386c6b8636ce58774429aa564a38d857c8c907b458ad6",
+    "size_ref": [
+      120,
+      26
+    ],
+    "source_pdf": "Aula 05 - PDFULL - Direito Civil - Teoria Geral do Negócio Jurídico.pdf",
+    "page": 21,
+    "id": "15bc090489b0"
+  },
+  {
+    "name": "STJ_frame_29",
+    "category": "STJ",
+    "type": "image",
+    "hash": "8ce01c710022b21a31140ef8b9b6bb648882bcf218e6a34bc022609721051e1a",
+    "size_ref": [
+      26,
+      120
+    ],
+    "source_pdf": "Aula 05 - PDFULL - Direito Civil - Teoria Geral do Negócio Jurídico.pdf",
+    "page": 21,
+    "id": "5dd9dc2d1b4c"
+  },
+  {
+    "name": "H1_frame_26",
+    "category": "H1",
+    "type": "image",
+    "hash": "4a8e8a44bf0dc4686d31155cd0c1dacdbf0059f8278613ff4c9fdcce81a6f998",
+    "size_ref": [
+      275,
+      210
+    ],
+    "source_pdf": "Aula06-PDFULL-DireitoCivil-DefeitosdoNegcioJurdico.InvalidadeeNulidade.AtosJurdicosLcitoseilcitos.pdf",
+    "page": 6,
+    "id": "2fe4afc77aba"
+  },
+  {
+    "name": "H1_frame_28",
+    "category": "H1",
+    "type": "image",
+    "hash": "7ba1c67bb9df7f5bbb9d0eb5ab2f37aaa05fd48d74c2f9c482b524eb70f07b27",
+    "size_ref": [
+      458,
+      203
+    ],
+    "source_pdf": "Aula06-PDFULL-DireitoCivil-DefeitosdoNegcioJurdico.InvalidadeeNulidade.AtosJurdicosLcitoseilcitos.pdf",
+    "page": 6,
+    "id": "d85cdf3785b9"
+  },
+  {
+    "name": "H1_frame_30",
+    "category": "H1",
+    "type": "image",
+    "hash": "56cae0b0f5716d6a2c3a54d5482347bff188289db1fef6757a1b017bed513b52",
+    "size_ref": [
+      229,
+      35
+    ],
+    "source_pdf": "Aula06-PDFULL-DireitoCivil-DefeitosdoNegcioJurdico.InvalidadeeNulidade.AtosJurdicosLcitoseilcitos.pdf",
+    "page": 6,
+    "id": "4b40f29751a6"
+  },
+  {
+    "name": "H2_frame_29",
+    "category": "H2",
+    "type": "image",
+    "hash": "b2efe036c2875553247d46090b5f55d55f8deb7212a8db94f0a6b9fde1470066",
+    "size_ref": [
+      997,
+      91
+    ],
+    "source_pdf": "Aula06-PDFULL-DireitoCivil-DefeitosdoNegcioJurdico.InvalidadeeNulidade.AtosJurdicosLcitoseilcitos.pdf",
+    "page": 6,
+    "id": "443648b67486"
+  },
+  {
+    "name": "H2_frame_30",
+    "category": "H2",
+    "type": "image",
+    "hash": "9b80f662ba9dd235e31f8f841c860048f80a78884a230305ab4211514d9f6483",
+    "size_ref": [
+      308,
+      89
+    ],
+    "source_pdf": "Aula06-PDFULL-DireitoCivil-DefeitosdoNegcioJurdico.InvalidadeeNulidade.AtosJurdicosLcitoseilcitos.pdf",
+    "page": 12,
+    "id": "35e816381155"
+  },
+  {
+    "name": "H2_frame_31",
+    "category": "H2",
+    "type": "image",
+    "hash": "395df0dde48b777cc16ddb865706650d7a3c036b3f66491bcbe6b0d54da9d772",
+    "size_ref": [
+      667,
+      127
+    ],
+    "source_pdf": "Aula06-PDFULL-DireitoCivil-DefeitosdoNegcioJurdico.InvalidadeeNulidade.AtosJurdicosLcitoseilcitos.pdf",
+    "page": 19,
+    "id": "2deb70219965"
+  },
+  {
+    "name": "H2_frame_32",
+    "category": "H2",
+    "type": "image",
+    "hash": "988efb2750b761b32049ad88e85f7dc6bccc267e97ad43d04bc4bbdbfcf59a0c",
+    "size_ref": [
+      907,
+      89
+    ],
+    "source_pdf": "Aula06-PDFULL-DireitoCivil-DefeitosdoNegcioJurdico.InvalidadeeNulidade.AtosJurdicosLcitoseilcitos.pdf",
+    "page": 24,
+    "id": "d7552aa58ec7"
+  },
+  {
+    "name": "STJ_frame_33",
+    "category": "STJ",
+    "type": "image",
+    "hash": "074b6667705b15f77b2d14e01da3213c476e30816ccb15e11ca46e7927b65920",
+    "size_ref": [
+      185,
+      189
+    ],
+    "source_pdf": "Aula06-PDFULL-DireitoCivil-DefeitosdoNegcioJurdico.InvalidadeeNulidade.AtosJurdicosLcitoseilcitos.pdf",
+    "page": 27,
+    "id": "661f523a68a9"
+  },
+  {
+    "name": "STJ_frame_35",
+    "category": "STJ",
+    "type": "image",
+    "hash": "2e89864968dde0167204cc01a9ae5115cad7598507d0dfda90105a7db7c72683",
+    "size_ref": [
+      290,
+      163
+    ],
+    "source_pdf": "Aula06-PDFULL-DireitoCivil-DefeitosdoNegcioJurdico.InvalidadeeNulidade.AtosJurdicosLcitoseilcitos.pdf",
+    "page": 27,
+    "id": "fb9e6ad8eb9a"
+  },
+  {
+    "name": "STJ_frame_35",
+    "category": "STJ",
+    "type": "image",
+    "hash": "9f96835c55455c4e173ebf5d35effa8e1d7b9073e6c67f34395df692e04202b9",
+    "size_ref": [
+      287,
+      163
+    ],
+    "source_pdf": "Aula06-PDFULL-DireitoCivil-DefeitosdoNegcioJurdico.InvalidadeeNulidade.AtosJurdicosLcitoseilcitos.pdf",
+    "page": 27,
+    "id": "1afb2642ece2"
+  },
+  {
+    "name": "STJ_frame_37",
+    "category": "STJ",
+    "type": "image",
+    "hash": "e0f6fe095c54c160d10d926351578559ccd43749dc574f9154dcec92d0ddc1e0",
+    "size_ref": [
+      185,
+      188
+    ],
+    "source_pdf": "Aula06-PDFULL-DireitoCivil-DefeitosdoNegcioJurdico.InvalidadeeNulidade.AtosJurdicosLcitoseilcitos.pdf",
+    "page": 27,
+    "id": "5fa3ed8234a6"
+  },
+  {
+    "name": "STJ_frame_37",
+    "category": "STJ",
+    "type": "image",
+    "hash": "0e7246588aa25e9678cbfa5bcb9c7c97773da9903835353542abba303865d878",
+    "size_ref": [
+      261,
+      164
+    ],
+    "source_pdf": "Aula06-PDFULL-DireitoCivil-DefeitosdoNegcioJurdico.InvalidadeeNulidade.AtosJurdicosLcitoseilcitos.pdf",
+    "page": 30,
+    "id": "ad7809ac43f0"
+  },
+  {
+    "name": "STJ_frame_39",
+    "category": "STJ",
+    "type": "image",
+    "hash": "7fd9a4fbc38b449888f7118bba8f277cca97ec0a1082cad130ddcd31c41dad51",
+    "size_ref": [
+      185,
+      189
+    ],
+    "source_pdf": "Aula06-PDFULL-DireitoCivil-DefeitosdoNegcioJurdico.InvalidadeeNulidade.AtosJurdicosLcitoseilcitos.pdf",
+    "page": 30,
+    "id": "eb262c251131"
+  },
+  {
+    "name": "STJ_frame_39",
+    "category": "STJ",
+    "type": "image",
+    "hash": "ce51db90aba79a04151746dfb726fd8d05451e5f578d410b314a3f1a11e0b58c",
+    "size_ref": [
+      186,
+      188
+    ],
+    "source_pdf": "Aula06-PDFULL-DireitoCivil-DefeitosdoNegcioJurdico.InvalidadeeNulidade.AtosJurdicosLcitoseilcitos.pdf",
+    "page": 30,
+    "id": "5b23369aeaf6"
+  },
+  {
+    "name": "STJ_frame_41",
+    "category": "STJ",
+    "type": "image",
+    "hash": "b8f47d2de1735289104f4f8cec544e7bcdd76d67cd4fd129def737d4a33cc589",
+    "size_ref": [
+      273,
+      163
+    ],
+    "source_pdf": "Aula06-PDFULL-DireitoCivil-DefeitosdoNegcioJurdico.InvalidadeeNulidade.AtosJurdicosLcitoseilcitos.pdf",
+    "page": 30,
+    "id": "1546643ed231"
+  },
+  {
+    "name": "STJ_frame_41",
+    "category": "STJ",
+    "type": "image",
+    "hash": "053d570cd3decb04674388694906ed1f3e83e4395640b88141c6e73494ebcea1",
+    "size_ref": [
+      261,
+      163
+    ],
+    "source_pdf": "Aula06-PDFULL-DireitoCivil-DefeitosdoNegcioJurdico.InvalidadeeNulidade.AtosJurdicosLcitoseilcitos.pdf",
+    "page": 30,
+    "id": "6f2fef5e85e1"
+  },
+  {
+    "name": "H1_frame_42",
+    "category": "H1",
+    "type": "image",
+    "hash": "f0ee7b796fa0313194e5fe040552bdcff87d8b23f80388a4f8ed398673148113",
+    "size_ref": [
+      274,
+      210
+    ],
+    "source_pdf": "Aula06-PDFULL-DireitoCivil-DefeitosdoNegcioJurdico.InvalidadeeNulidade.AtosJurdicosLcitoseilcitos.pdf",
+    "page": 33,
+    "id": "3544066a241a"
+  },
+  {
+    "name": "H1_frame_44",
+    "category": "H1",
+    "type": "image",
+    "hash": "aaabe4b0193f3833440629e07d8370682350d7218f71a552196d29e80e88c6e1",
+    "size_ref": [
+      303,
+      232
+    ],
+    "source_pdf": "Aula06-PDFULL-DireitoCivil-DefeitosdoNegcioJurdico.InvalidadeeNulidade.AtosJurdicosLcitoseilcitos.pdf",
+    "page": 33,
+    "id": "0008eabcf3c1"
+  },
+  {
+    "name": "H1_frame_46",
+    "category": "H1",
+    "type": "image",
+    "hash": "cda3a0b9e9eac8ad523e2961b4f53b5013677d5ca28a60c1a1d7bff53a0bf8a2",
+    "size_ref": [
+      228,
+      35
+    ],
+    "source_pdf": "Aula06-PDFULL-DireitoCivil-DefeitosdoNegcioJurdico.InvalidadeeNulidade.AtosJurdicosLcitoseilcitos.pdf",
+    "page": 33,
+    "id": "cbd381a8fa0f"
+  },
+  {
+    "name": "H1_frame_48",
+    "category": "H1",
+    "type": "image",
+    "hash": "277bee1dcff2163d8b2222ab413b06a06cdf423e5742323ab29246fc9d654066",
+    "size_ref": [
+      228,
+      43
+    ],
+    "source_pdf": "Aula06-PDFULL-DireitoCivil-DefeitosdoNegcioJurdico.InvalidadeeNulidade.AtosJurdicosLcitoseilcitos.pdf",
+    "page": 33,
+    "id": "bd8595cdc64d"
+  },
+  {
+    "name": "H2_frame_46",
+    "category": "H2",
+    "type": "image",
+    "hash": "4558a081b273b69b5691b95f1492e9211d93f6ff4ab61e102458d69ddebbaa36",
+    "size_ref": [
+      2480,
+      206
+    ],
+    "source_pdf": "Aula06-PDFULL-DireitoCivil-DefeitosdoNegcioJurdico.InvalidadeeNulidade.AtosJurdicosLcitoseilcitos.pdf",
+    "page": 34,
+    "id": "2f81d4b439a5"
+  },
+  {
+    "name": "H2_frame_48",
+    "category": "H2",
+    "type": "image",
+    "hash": "4f514741cdca3f4f125bbfe06eea0c6dbe21b53b6479e292fb4dc834fdeb709e",
+    "size_ref": [
+      1467,
+      109
+    ],
+    "source_pdf": "Aula06-PDFULL-DireitoCivil-DefeitosdoNegcioJurdico.InvalidadeeNulidade.AtosJurdicosLcitoseilcitos.pdf",
+    "page": 34,
+    "id": "0f4d4863ad3e"
+  },
+  {
+    "id": "9a0a74b0380f",
+    "name": "H2_frame_48",
+    "category": "H2",
+    "type": "image",
+    "hash": "d009d16e87aa7e77b98052329baa170e35f2fced355b2805c51b62055188c1fc",
+    "size_ref": [
+      1582,
+      108
+    ],
+    "source_pdf": "Aula06-PDFULL-DireitoCivil-DefeitosdoNegcioJurdico.InvalidadeeNulidade.AtosJurdicosLcitoseilcitos.pdf",
+    "page": 42,
+    "created_at": "2026-07-07T12:21:52+00:00"
+  },
+  {
+    "id": "b25ac1d383e5",
+    "name": "STJ_frame_49",
+    "category": "STJ",
+    "type": "image",
+    "hash": "7b363f0113a83bfb9beba8941b52d42f2b83da849fa36f9323f42368db8f024d",
+    "size_ref": [
+      186,
+      189
+    ],
+    "source_pdf": "Aula06-PDFULL-DireitoCivil-DefeitosdoNegcioJurdico.InvalidadeeNulidade.AtosJurdicosLcitoseilcitos.pdf",
+    "page": 44,
+    "created_at": "2026-07-07T12:22:21+00:00"
+  },
+  {
+    "id": "5ac2c3c490e5",
+    "name": "STJ_frame_51",
+    "category": "STJ",
+    "type": "image",
+    "hash": "bde63e9c2e19c9110b32ad8fdf2608ee3696c42a4d5806e62790c8d5a06c0f61",
+    "size_ref": [
+      258,
+      163
+    ],
+    "source_pdf": "Aula06-PDFULL-DireitoCivil-DefeitosdoNegcioJurdico.InvalidadeeNulidade.AtosJurdicosLcitoseilcitos.pdf",
+    "page": 44,
+    "created_at": "2026-07-07T12:22:21+00:00"
+  },
+  {
+    "id": "e0dbae9b97c4",
+    "name": "H1_frame_51",
+    "category": "H1",
+    "type": "image",
+    "hash": "eff3b1c731ae9d63fef8c065a641d1262d5132e9f0a342613de681b2d34f67ff",
+    "size_ref": [
+      243,
+      185
+    ],
+    "source_pdf": "Aula06-PDFULL-DireitoCivil-DefeitosdoNegcioJurdico.InvalidadeeNulidade.AtosJurdicosLcitoseilcitos.pdf",
+    "page": 47,
+    "created_at": "2026-07-07T12:22:39+00:00"
+  },
+  {
+    "id": "c1b0e96fb002",
+    "name": "H1_frame_53",
+    "category": "H1",
+    "type": "image",
+    "hash": "5f40b945c1e361d8b5a8c9eb5eca35bc29a1ad0d20c37d25c037ec7261601323",
+    "size_ref": [
+      228,
+      176
+    ],
+    "source_pdf": "Aula06-PDFULL-DireitoCivil-DefeitosdoNegcioJurdico.InvalidadeeNulidade.AtosJurdicosLcitoseilcitos.pdf",
+    "page": 47,
+    "created_at": "2026-07-07T12:22:39+00:00"
+  },
+  {
+    "id": "c390eaec57e2",
+    "name": "H1_frame_55",
+    "category": "H1",
+    "type": "image",
+    "hash": "ee51b21452e7ad0b59bb58e70c2c6b5fbdeba32960e7dfa6930b7f1f1e038bcb",
+    "size_ref": [
+      228,
+      35
+    ],
+    "source_pdf": "Aula06-PDFULL-DireitoCivil-DefeitosdoNegcioJurdico.InvalidadeeNulidade.AtosJurdicosLcitoseilcitos.pdf",
+    "page": 47,
+    "created_at": "2026-07-07T12:22:39+00:00"
+  },
+  {
+    "id": "ded04950d969",
+    "name": "H1_frame_57",
+    "category": "H1",
+    "type": "image",
+    "hash": "8db48d52fab8dddfe3888a31d53a08261efe709d2ed8f89df312e197a740a83c",
+    "size_ref": [
+      225,
+      34
+    ],
+    "source_pdf": "Aula06-PDFULL-DireitoCivil-DefeitosdoNegcioJurdico.InvalidadeeNulidade.AtosJurdicosLcitoseilcitos.pdf",
+    "page": 47,
+    "created_at": "2026-07-07T12:22:39+00:00"
+  },
+  {
+    "id": "fd5033d70f9a",
+    "name": "H2_frame_55",
+    "category": "H2",
+    "type": "image",
+    "hash": "fc497c98ca41a7512beef1ed198c06660dace25c438c3482d4c6bbf5ee6e1da3",
+    "size_ref": [
+      430,
+      89
+    ],
+    "source_pdf": "Aula06-PDFULL-DireitoCivil-DefeitosdoNegcioJurdico.InvalidadeeNulidade.AtosJurdicosLcitoseilcitos.pdf",
+    "page": 48,
+    "created_at": "2026-07-07T12:22:59+00:00"
+  },
+  {
+    "id": "148491ef4483",
+    "name": "H2_frame_56",
+    "category": "H2",
+    "type": "image",
+    "hash": "c7271e87916ebf4a325acca19d262cd2121b0c9a63c18031df9a77daed2dd9f1",
+    "size_ref": [
+      452,
+      111
+    ],
+    "source_pdf": "Aula06-PDFULL-DireitoCivil-DefeitosdoNegcioJurdico.InvalidadeeNulidade.AtosJurdicosLcitoseilcitos.pdf",
+    "page": 48,
+    "created_at": "2026-07-07T12:23:07+00:00"
+  },
+  {
+    "id": "a4026b68496b",
+    "name": "STF_frame_57",
+    "category": "STF",
+    "type": "image",
+    "hash": "90cc9210411072311c5efd234e83521d19bfd63db751abe9cbaf1a245d33d89a",
+    "size_ref": [
+      26,
+      120
+    ],
+    "source_pdf": "Aula 01 - PDFULL - Direito Civil - LINDB e Direito Civil Constitucional (1).pdf",
+    "page": 42,
+    "created_at": "2026-07-07T12:25:05+00:00"
+  },
+  {
+    "id": "0ba46c867a3b",
+    "name": "STF_frame_59",
+    "category": "STF",
+    "type": "image",
+    "hash": "8388579235b5e01f81e88152b1978f429d016b72f6d075d3e4450f18a1e40eda",
+    "size_ref": [
+      120,
+      26
+    ],
+    "source_pdf": "Aula 01 - PDFULL - Direito Civil - LINDB e Direito Civil Constitucional (1).pdf",
+    "page": 42,
+    "created_at": "2026-07-07T12:25:05+00:00"
+  },
+  {
+    "id": "1dcfe3d16425",
+    "name": "STF_frame_61",
+    "category": "STF",
+    "type": "image",
+    "hash": "453ed6a0e4914c62f448ffd7413de09f6b6340be1818205789026594cde7a943",
+    "size_ref": [
+      174,
+      78
+    ],
+    "source_pdf": "Aula 01 - PDFULL - Direito Civil - LINDB e Direito Civil Constitucional (1).pdf",
+    "page": 42,
+    "created_at": "2026-07-07T12:25:05+00:00"
+  },
+  {
+    "id": "4ed788a68012",
+    "name": "STF_frame_63",
+    "category": "STF",
+    "type": "image",
+    "hash": "89a1b0ab0b0af038adcb737b0a8750756f79a5863f749ea431dfc5e1b18899f0",
+    "size_ref": [
+      62,
+      67
+    ],
+    "source_pdf": "Aula 01 - PDFULL - Direito Civil - LINDB e Direito Civil Constitucional (1).pdf",
+    "page": 42,
+    "created_at": "2026-07-07T12:25:05+00:00"
+  },
+  {
+    "id": "11ac9ce971b7",
+    "name": "STF_frame_65",
+    "category": "STF",
+    "type": "image",
+    "hash": "892fdf11b6acc557a43f60f0051375a1cb1c04df2fd0449a1d94c5e451edbbb7",
+    "size_ref": [
+      46,
+      67
+    ],
+    "source_pdf": "Aula 01 - PDFULL - Direito Civil - LINDB e Direito Civil Constitucional (1).pdf",
+    "page": 42,
+    "created_at": "2026-07-07T12:25:05+00:00"
+  },
+  {
+    "id": "7418935f146c",
+    "name": "H1_frame_62",
+    "category": "H1",
+    "type": "image",
+    "hash": "fcc57eabe4c18e0e08242c9eae4ea70283e05941e37fe5bd3cf54ee57e20f498",
+    "size_ref": [
+      148,
+      11
+    ],
+    "source_pdf": "Aula 01 - PDFULL - Direito Civil - LINDB e Direito Civil Constitucional (1).pdf",
+    "page": 49,
+    "created_at": "2026-07-07T12:26:26+00:00"
+  },
+  {
+    "id": "5079bb112651",
+    "name": "H1_frame_63",
+    "category": "H1",
+    "type": "image",
+    "hash": "0c8c1fbf4f9561af10081993d2154d30bbb2054419dab0ee62da6966bbd33486",
+    "size_ref": [
+      142,
+      108
+    ],
+    "source_pdf": "Aula 07 - PDFULL - Processo do Trabalho - Recursos em Espécie (Parte 1).pdf",
+    "page": 6,
+    "created_at": "2026-07-07T12:35:11+00:00"
+  },
+  {
+    "id": "6d19bf36a1e5",
+    "name": "H1_frame_65",
+    "category": "H1",
+    "type": "image",
+    "hash": "4fb428f6be6611c6bba479ba06c1dda9a1c63b7e9ca2720635101e221a294805",
+    "size_ref": [
+      151,
+      115
+    ],
+    "source_pdf": "Aula 07 - PDFULL - Processo do Trabalho - Recursos em Espécie (Parte 1).pdf",
+    "page": 6,
+    "created_at": "2026-07-07T12:35:11+00:00"
+  },
+  {
+    "id": "c4974d575f96",
+    "name": "TST_fill_65",
+    "category": "TST",
+    "type": "color",
+    "rgb": [
+      1.0,
+      0.945,
+      0.8
+    ],
+    "source_pdf": "Aula 07 - PDFULL - Processo do Trabalho - Recursos em Espécie (Parte 1).pdf",
+    "page": 40,
+    "created_at": "2026-07-07T12:36:43+00:00"
+  },
+  {
+    "id": "203338e66ca7",
+    "name": "H2_frame_66",
+    "category": "H2",
+    "type": "image",
+    "hash": "945ba5bcc1c5a99f75344077011151cdae4ffb735b7913f1db9517c52822f30b",
+    "size_ref": [
+      183,
+      64
+    ],
+    "source_pdf": "Aula 08 - PDFULL - Processo do Trabalho - Recursos em Espécie (Parte 2), Ação Rescisória e Mandado de Segurança.pdf",
+    "page": 49,
+    "created_at": "2026-07-07T12:42:44+00:00"
+  },
+  {
+    "id": "f366ffc15916",
+    "name": "H1_frame_66",
+    "category": "H1",
+    "type": "image",
+    "hash": "6b6f98575fe5a5675e4adb8cc71e05f7503e62c6bc99c3f219cf351abd6dd576",
+    "size_ref": [
+      2,
+      2
+    ],
+    "source_pdf": "Aula 08 - PDFULL - Processo do Trabalho - Recursos em Espécie (Parte 2), Ação Rescisória e Mandado de Segurança.pdf",
+    "page": 52,
+    "created_at": "2026-07-07T12:44:07+00:00"
   }
 ]
