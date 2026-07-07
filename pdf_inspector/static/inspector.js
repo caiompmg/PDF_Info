@@ -216,6 +216,14 @@ function showResult(data) {
 
 function renderSwatches(data) {
   swatchesEl.innerHTML = "";
+
+  if (data.pattern_match) {
+    const el = document.createElement("span");
+    el.className = "swatch swatch-pattern";
+    el.textContent = `padrão salvo: ${data.pattern_match.category} (${data.pattern_match.name})`;
+    swatchesEl.appendChild(el);
+  }
+
   const fc = data.fill_color;
   if (fc) {
     const css = `rgb(${fc.rgb.map((v) => Math.round(v * 255)).join(",")})`;
@@ -230,11 +238,15 @@ function renderSwatches(data) {
     ));
     swatchesEl.appendChild(el);
   }
+
   for (const img of data.frame || []) {
     const el = document.createElement("span");
-    el.className = "swatch";
-    el.textContent = `moldura ${img.width}×${img.height} ${img.hash.slice(0, 12)}…` +
-      (img.palette_match ? ` = ${img.palette_match}` : "");
+    el.className = img.generic ? "swatch swatch-generic" : "swatch";
+    el.title = img.generic
+      ? "Imagem genérica (linha/régua minúscula) — ignorada na assinatura do padrão."
+      : "";
+    el.textContent = `${img.generic ? "linha genérica" : "moldura"} ${img.width}×${img.height} ` +
+      `${img.hash.slice(0, 12)}…` + (img.palette_match ? ` = ${img.palette_match}` : "");
     swatchesEl.appendChild(el);
   }
 }
@@ -287,7 +299,24 @@ function groupPaletteEntries(entries) {
 
 function paletteRowLabel(entry) {
   const when = entry.created_at ? entry.created_at.replace("T", " ").slice(0, 16) : "sem data";
-  return `${entry.name} · ${when}`;
+  if (entry.type === "formatting") {
+    return `formatação ${entry.category}: "${entry.markdown_prefix}…"`;
+  }
+  const name = entry.name || entry.id;
+  if (entry.type === "block_pattern") {
+    const layers = entry.frame_layers ? entry.frame_layers.length : 0;
+    return `${name} · ${layers} camada(s) de moldura · ${when}`;
+  }
+  return `${name} · ${when}`;
+}
+
+function paletteRowMeta(entry) {
+  switch (entry.type) {
+    case "color": return "cor";
+    case "block_pattern": return "padrão";
+    case "formatting": return "fmt";
+    default: return "img";
+  }
 }
 
 function renderPaletteBrowser(entries) {
@@ -312,8 +341,11 @@ function renderPaletteBrowser(entries) {
 
       const chip = document.createElement("span");
       chip.className = "chip";
-      if (entry.type === "color" && entry.rgb) {
-        chip.style.background = `rgb(${entry.rgb.map((v) => Math.round(v * 255)).join(",")})`;
+      const chipRgb = entry.type === "color" ? entry.rgb : entry.type === "block_pattern" ? entry.fill_rgb : null;
+      if (chipRgb) {
+        chip.style.background = `rgb(${chipRgb.map((v) => Math.round(v * 255)).join(",")})`;
+      } else if (entry.type === "formatting") {
+        chip.textContent = "MD";
       } else {
         chip.textContent = "IMG";
       }
@@ -322,12 +354,12 @@ function renderPaletteBrowser(entries) {
       const text = document.createElement("span");
       text.className = "row-text";
       text.textContent = paletteRowLabel(entry);
-      text.title = entry.name;
+      text.title = entry.name || entry.id;
       row.appendChild(text);
 
       const meta = document.createElement("span");
       meta.className = "row-meta";
-      meta.textContent = entry.type === "color" ? "cor" : "img";
+      meta.textContent = paletteRowMeta(entry);
       row.appendChild(meta);
 
       paletteListEl.appendChild(row);
