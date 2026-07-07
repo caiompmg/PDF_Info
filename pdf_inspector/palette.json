@@ -868,17 +868,38 @@
     "created_at": "2026-07-07T12:42:44+00:00"
   },
   {
-    "id": "f366ffc15916",
-    "name": "H1_frame_66",
+    "id": "1ec5ecb46a9d",
+    "type": "formatting",
     "category": "H1",
-    "type": "image",
-    "hash": "6b6f98575fe5a5675e4adb8cc71e05f7503e62c6bc99c3f219cf351abd6dd576",
-    "size_ref": [
-      2,
-      2
-    ],
-    "source_pdf": "Aula 08 - PDFULL - Processo do Trabalho - Recursos em Espécie (Parte 2), Ação Rescisória e Mandado de Segurança.pdf",
-    "page": 52,
-    "created_at": "2026-07-07T12:44:07+00:00"
+    "markdown_prefix": "# ",
+    "markdown_suffix": ""
+  },
+  {
+    "id": "6f192725ee09",
+    "type": "formatting",
+    "category": "H2",
+    "markdown_prefix": "## ",
+    "markdown_suffix": ""
+  },
+  {
+    "id": "7460695302c0",
+    "type": "formatting",
+    "category": "STF",
+    "markdown_prefix": "> **STF:** ",
+    "markdown_suffix": ""
+  },
+  {
+    "id": "5f851c7a97cd",
+    "type": "formatting",
+    "category": "STJ",
+    "markdown_prefix": "> **STJ:** ",
+    "markdown_suffix": ""
+  },
+  {
+    "id": "72b1effe5413",
+    "type": "formatting",
+    "category": "TST",
+    "markdown_prefix": "> **TST:** ",
+    "markdown_suffix": ""
   }
 ]

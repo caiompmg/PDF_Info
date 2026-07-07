@@ -1,12 +1,20 @@
 """Inspetor Geométrico de PDF — backend.
 
 Ferramenta isolada de leitura/inspeção: abre um PDF e, ao clicar/selecionar
-uma região, identifica dois padrões objetivos daquele ponto — a moldura
-estilizada (imagens de borda/etiqueta reaproveitadas, por hash SHA-256) e a
-cor de preenchimento de fundo do bloco (amostrada do próprio render, já
-composta com qualquer opacidade/gradiente). Serve para marcar blocos como
-H1, H2, STF, STJ ou TST e consolidar esses padrões em palette.json, para uso
-por outra ferramenta de formatação.
+uma região, monta a ASSINATURA objetiva daquele bloco — o conjunto de
+camadas de moldura (imagens de borda/etiqueta reaproveitadas, cada uma por
+hash SHA-256, na posição relativa exata entre si) mais a cor de
+preenchimento de fundo (amostrada do próprio render, já composta com
+qualquer opacidade/gradiente). Imagens minúsculas (linhas/réguas genéricas
+reaproveitadas o documento inteiro) são descartadas da assinatura, para não
+gerar falso positivo.
+
+Salvar uma assinatura sob uma categoria (H1, H2, STF, STJ, TST) grava UM
+único padrão composto em palette.json — não uma entrada solta por camada —
+para que "onde no PDF há algo nesses exatos termos" seja uma pergunta que
+faz sentido responder depois, por esta ou por outra ferramenta que aplique
+a formatação Markdown pré-configurada por categoria (também em
+palette.json, como entradas do tipo "formatting").
 
 Fora de escopo: OCR, formatação, edição do documento, qualquer chamada a IA.
 
@@ -63,6 +71,27 @@ SEARCH_MARGIN_PT = 2.0
 # Recuo (em pontos PDF) a partir das bordas de uma seleção ao amostrar a cor
 # de fundo, para não pegar a própria moldura/borda decorativa.
 FILL_SAMPLE_INSET_PT = 3.0
+# Imagens com as duas dimensões originais (em pixels) menores ou iguais a
+# este valor são descartadas da assinatura: são primitivas genéricas de
+# preenchimento (linhas/réguas esticadas), reaproveitadas o documento
+# inteiro para fins não relacionados — não distinguem um tipo de bloco.
+GENERIC_IMAGE_MAX_DIM = 5
+# Tolerância (em pontos PDF) ao comparar a posição relativa de cada camada
+# de moldura entre a assinatura atual e um padrão salvo.
+REL_BBOX_TOLERANCE = 3.0
+
+# Formatação Markdown padrão sugerida por categoria — semeada em
+# palette.json na primeira execução (se não houver nenhuma entrada
+# "formatting" ainda) e livre para ser editada depois (na mão ou via
+# POST /palette/formatting), tanto por esta ferramenta quanto pela que for
+# consumir os padrões salvos para converter PDF em Markdown.
+DEFAULT_FORMATTING = {
+    "H1": {"markdown_prefix": "# ", "markdown_suffix": ""},
+    "H2": {"markdown_prefix": "## ", "markdown_suffix": ""},
+    "STF": {"markdown_prefix": "> **STF:** ", "markdown_suffix": ""},
+    "STJ": {"markdown_prefix": "> **STJ:** ", "markdown_suffix": ""},
+    "TST": {"markdown_prefix": "> **TST:** ", "markdown_suffix": ""},
+}
 
 app = Flask(__name__, static_folder=None)
 app.config["MAX_CONTENT_LENGTH"] = 100 * 1024 * 1024  # 100 MB
@@ -75,27 +104,42 @@ SESSIONS: dict[str, dict] = {}
 def load_palette() -> list[dict]:
     """Carrega o palette.json de trabalho (sempre o desta pasta).
 
-    Cada entrada tem "id" (identificador estável, para selecionar/excluir),
-    "name", "category" (uma de CATEGORIES) e "type" ("image", com "hash",
-    ou "color", com "rgb"). Formato inválido é ignorado sem erro (arquivo
-    começa vazio na primeira vez). Entradas antigas sem "id" (ex.: as
-    curadas manualmente) ganham um id na primeira leitura, gravado de volta
-    no arquivo para ficar estável dali em diante.
+    Uma lista plana de entradas tipadas por "type":
+    - "block_pattern": um padrão composto salvo via /save — "category",
+      "frame_layers" (lista de {"hash", "rel_bbox", "width", "height"},
+      posição relativa à origem da seleção) e/ou "fill_rgb".
+    - "image" / "color": entradas legadas, curadas manualmente ou salvas
+      antes desta versão (compatibilidade; ainda usadas para o
+      palette_match individual por camada).
+    - "formatting": um template Markdown por categoria.
+
+    Formato inválido é ignorado sem erro (arquivo começa vazio na primeira
+    vez). Entradas antigas sem "id" ganham um id na primeira leitura,
+    gravado de volta no arquivo para ficar estável dali em diante. Se não
+    houver nenhuma entrada "formatting", semeia os padrões default.
     """
     if not PALETTE_PATH.is_file():
-        return []
-    try:
-        data = json.loads(PALETTE_PATH.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return []
-    if not isinstance(data, list):
-        return []
-    missing_id = False
+        data = []
+    else:
+        try:
+            data = json.loads(PALETTE_PATH.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            data = []
+        if not isinstance(data, list):
+            data = []
+
+    dirty = False
     for entry in data:
         if "id" not in entry:
             entry["id"] = uuid.uuid4().hex[:12]
-            missing_id = True
-    if missing_id:
+            dirty = True
+
+    if not any(e.get("type") == "formatting" for e in data):
+        for category, fmt in DEFAULT_FORMATTING.items():
+            data.append({"id": uuid.uuid4().hex[:12], "type": "formatting", "category": category, **fmt})
+        dirty = True
+
+    if dirty:
         save_palette(data)
     return data
 
@@ -191,7 +235,13 @@ def region_hits(rect: fitz.Rect, target: fitz.Rect) -> bool:
 def collect_frame(doc: fitz.Document, page: fitz.Page, target: fitz.Rect) -> list[dict]:
     """Imagens (molduras/etiquetas estilizadas) cujo rect intersecta a
     região alvo, identificadas por hash SHA-256 dos bytes originais —
-    estável entre páginas/PDFs que reaproveitam a mesma arte."""
+    estável entre páginas/PDFs que reaproveitam a mesma arte.
+
+    Cada resultado traz "generic": True quando a imagem original é
+    minúscula dos dois lados (ex.: 2×2px) — sinal de que é uma primitiva
+    de preenchimento genérica (linha/régua esticada), não uma moldura
+    distintiva, e por isso não entra na assinatura de um padrão salvo.
+    """
     results = []
     seen = set()
     for image_info in page.get_images(full=True):
@@ -205,16 +255,83 @@ def collect_frame(doc: fitz.Document, page: fitz.Page, target: fitz.Rect) -> lis
             seen.add(key)
             extracted = doc.extract_image(xref)
             sha256 = hashlib.sha256(extracted["image"]).hexdigest()
+            width, height = extracted["width"], extracted["height"]
             results.append(
                 {
                     "hash": sha256,
                     "bbox": [round(v, 2) for v in rect],
-                    "width": extracted["width"],
-                    "height": extracted["height"],
+                    "width": width,
+                    "height": height,
+                    "generic": width <= GENERIC_IMAGE_MAX_DIM and height <= GENERIC_IMAGE_MAX_DIM,
                     "palette_match": match_image_hash(sha256),
                 }
             )
     return results
+
+
+def build_signature(target: fitz.Rect, frame: list[dict], fill_rgb) -> dict:
+    """Monta a assinatura objetiva de um bloco: as camadas de moldura não
+    genéricas, com sua posição relativa à origem da seleção (para o
+    padrão valer em qualquer lugar da página em que reaparecer), mais a
+    cor de fundo."""
+    layers = []
+    for image in frame:
+        if image["generic"]:
+            continue
+        bx0, by0, bx1, by1 = image["bbox"]
+        layers.append(
+            {
+                "hash": image["hash"],
+                "rel_bbox": [
+                    round(bx0 - target.x0, 2),
+                    round(by0 - target.y0, 2),
+                    round(bx1 - target.x0, 2),
+                    round(by1 - target.y0, 2),
+                ],
+                "width": image["width"],
+                "height": image["height"],
+            }
+        )
+    layers.sort(key=lambda layer: (layer["rel_bbox"][0], layer["rel_bbox"][1]))
+    return {"frame_layers": layers, "fill_rgb": fill_rgb}
+
+
+def signature_is_empty(signature: dict) -> bool:
+    return not signature["frame_layers"] and is_near_white(signature["fill_rgb"])
+
+
+def match_pattern(signature: dict):
+    """Procura, entre os padrões compostos salvos, um cujos termos batem
+    exatamente com a assinatura atual: mesmo conjunto de camadas de
+    moldura (por hash), cada uma na mesma posição relativa (com
+    tolerância), e/ou a mesma cor de fundo — segundo o que o padrão salvo
+    exige. Retorna a entrada do palette, ou None."""
+    sig_layers_by_hash = {layer["hash"]: layer for layer in signature["frame_layers"]}
+    for entry in PALETTE:
+        if entry.get("type") != "block_pattern":
+            continue
+        pattern_layers = entry.get("frame_layers") or []
+        if pattern_layers:
+            if set(sig_layers_by_hash) != {layer["hash"] for layer in pattern_layers}:
+                continue
+            if any(
+                any(
+                    abs(a - b) > REL_BBOX_TOLERANCE
+                    for a, b in zip(sig_layers_by_hash[layer["hash"]]["rel_bbox"], layer["rel_bbox"])
+                )
+                for layer in pattern_layers
+            ):
+                continue
+        pattern_rgb = entry.get("fill_rgb")
+        if pattern_rgb is not None:
+            if signature["fill_rgb"] is None or any(
+                abs(a - b) > COLOR_TOLERANCE for a, b in zip(signature["fill_rgb"], pattern_rgb)
+            ):
+                continue
+        elif not pattern_layers:
+            continue  # padrão sem moldura e sem cor não é um termo válido para bater
+        return entry
+    return None
 
 
 def sample_pixel(page: fitz.Page, x: float, y: float, dpi: int):
@@ -258,7 +375,9 @@ def is_near_white(rgb, tolerance=0.03) -> bool:
 
 def inspect_region(doc: fitz.Document, page: fitz.Page, target: fitz.Rect, dpi: int) -> dict:
     """Núcleo compartilhado por /inspect e /save: encontra a moldura
-    (imagens) e a cor de fundo de uma região."""
+    (imagens), a cor de fundo de uma região, monta a assinatura (moldura
+    não genérica + posição relativa + cor) e busca um padrão salvo que
+    bata exatamente com ela."""
     frame = collect_frame(doc, page, target)
     expanded = False
     if not frame:
@@ -280,7 +399,20 @@ def inspect_region(doc: fitz.Document, page: fitz.Page, target: fitz.Rect, dpi: 
             "palette_match": match_color(fill_rgb),
         }
 
-    return {"frame": frame, "fill_color": fill_color, "expanded_by_margin": expanded}
+    signature = build_signature(target, frame, fill_rgb)
+    pattern = match_pattern(signature)
+
+    return {
+        "frame": frame,
+        "fill_color": fill_color,
+        "expanded_by_margin": expanded,
+        "signature": signature,
+        "pattern_match": (
+            {"id": pattern["id"], "name": pattern["name"], "category": pattern["category"]}
+            if pattern
+            else None
+        ),
+    }
 
 
 @app.get("/")
@@ -334,6 +466,7 @@ def inspect(page_number):
         },
         "frame": result["frame"],
         "fill_color": result["fill_color"],
+        "pattern_match": result["pattern_match"],
     }
     if not result["frame"] and is_near_white(result["fill_color"]["rgb"] if result["fill_color"] else None):
         response["message"] = "Nada encontrado nesta região (mesmo com margem de busca)."
@@ -354,54 +487,54 @@ def save_entry(page_number):
         abort(400, description=f"category deve ser um de {', '.join(CATEGORIES)}.")
 
     result = inspect_region(doc, page, target, dpi)
-    added = []
-    now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    signature = result["signature"]
+    if signature_is_empty(signature):
+        abort(400, description="Nada de distintivo nessa região (sem moldura reconhecível nem cor de fundo) para salvar.")
 
-    for image in result["frame"]:
-        already = any(e.get("category") == category and e.get("hash") == image["hash"] for e in PALETTE)
-        if already:
-            continue
-        entry = {
-            "id": uuid.uuid4().hex[:12],
-            "name": f"{category}_frame_{len(PALETTE) + len(added) + 1}",
-            "category": category,
-            "type": "image",
-            "hash": image["hash"],
-            "size_ref": [image["width"], image["height"]],
-            "source_pdf": filename,
-            "page": page_number,
-            "created_at": now,
-        }
+    already = any(
+        e.get("type") == "block_pattern"
+        and e.get("category") == category
+        and e.get("frame_layers") == signature["frame_layers"]
+        and e.get("fill_rgb") == signature["fill_rgb"]
+        for e in PALETTE
+    )
+    if already:
+        return jsonify({"added": [], "already_existed": True})
+
+    count = sum(1 for e in PALETTE if e.get("type") == "block_pattern" and e.get("category") == category)
+    entry = {
+        "id": uuid.uuid4().hex[:12],
+        "name": f"{category}_pattern_{count + 1}",
+        "category": category,
+        "type": "block_pattern",
+        "frame_layers": signature["frame_layers"],
+        "fill_rgb": signature["fill_rgb"],
+        "source_pdf": filename,
+        "page": page_number,
+        "created_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+    }
+    PALETTE.append(entry)
+    save_palette(PALETTE)
+    return jsonify({"added": [entry], "already_existed": False})
+
+
+@app.post("/palette/formatting")
+def set_formatting():
+    """Cria ou atualiza o template Markdown de uma categoria."""
+    body = request.get_json(silent=True) or {}
+    category = body.get("category")
+    if category not in CATEGORIES:
+        abort(400, description=f"category deve ser um de {', '.join(CATEGORIES)}.")
+    prefix = body.get("markdown_prefix", "")
+    suffix = body.get("markdown_suffix", "")
+    entry = next((e for e in PALETTE if e.get("type") == "formatting" and e.get("category") == category), None)
+    if entry is None:
+        entry = {"id": uuid.uuid4().hex[:12], "type": "formatting", "category": category}
         PALETTE.append(entry)
-        added.append(entry)
-
-    fill_color = result["fill_color"]
-    if fill_color is not None and not is_near_white(fill_color["rgb"]):
-        already = any(
-            e.get("category") == category
-            and e.get("type") == "color"
-            and e.get("rgb")
-            and all(abs(a - b) <= COLOR_TOLERANCE for a, b in zip(e["rgb"], fill_color["rgb"]))
-            for e in PALETTE
-        )
-        if not already:
-            entry = {
-                "id": uuid.uuid4().hex[:12],
-                "name": f"{category}_fill_{len(PALETTE) + len(added) + 1}",
-                "category": category,
-                "type": "color",
-                "rgb": fill_color["rgb"],
-                "source_pdf": filename,
-                "page": page_number,
-                "created_at": now,
-            }
-            PALETTE.append(entry)
-            added.append(entry)
-
-    if added:
-        save_palette(PALETTE)
-
-    return jsonify({"added": added, "already_existed": not added})
+    entry["markdown_prefix"] = prefix
+    entry["markdown_suffix"] = suffix
+    save_palette(PALETTE)
+    return jsonify(entry)
 
 
 @app.get("/palette")
