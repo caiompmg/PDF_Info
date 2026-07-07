@@ -7,19 +7,39 @@ borda, bounding box, hash SHA-256 de imagens) da região clicada/selecionada.
 Fora de escopo: OCR, formatação, edição do documento, qualquer chamada a IA.
 
 Uso:
-    pip install -r requirements.txt
     python server.py [--port 5000]
+    # instala Flask e PyMuPDF sozinho na primeira vez, se faltarem
     # abrir http://localhost:5000 no navegador
 """
 
 import argparse
 import hashlib
+import importlib.util
 import json
+import subprocess
+import sys
 import uuid
 from pathlib import Path
 
-import fitz  # PyMuPDF
-from flask import Flask, abort, jsonify, request, send_file, send_from_directory
+
+def _ensure_dependencies() -> None:
+    """Instala Flask/PyMuPDF via pip se não estiverem disponíveis.
+
+    Evita obrigar quem só quer usar a ferramenta a rodar
+    `pip install -r requirements.txt` manualmente antes.
+    """
+    required = {"fitz": "PyMuPDF>=1.24,<2.0", "flask": "Flask>=3.0,<4.0"}
+    missing = [spec for module, spec in required.items() if importlib.util.find_spec(module) is None]
+    if not missing:
+        return
+    print(f"Instalando dependências ausentes: {', '.join(missing)}...", file=sys.stderr)
+    subprocess.check_call([sys.executable, "-m", "pip", "install", *missing])
+
+
+_ensure_dependencies()
+
+import fitz  # noqa: E402  (PyMuPDF; import após garantir a instalação)
+from flask import Flask, abort, jsonify, request, send_file, send_from_directory  # noqa: E402
 
 BASE_DIR = Path(__file__).resolve().parent
 STATIC_DIR = BASE_DIR / "static"
