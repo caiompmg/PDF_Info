@@ -33,6 +33,27 @@ Objetivo: subsidiar, sem IA em nenhuma etapa, uma base de dados precisa o
 bastante para automatizar a formatação de PDF → Markdown. Fora de escopo:
 OCR, a própria conversão/edição do documento, qualquer chamada a IA.
 
+## Ferramenta subsidiária: onde ela entra no pipeline
+
+Este inspetor não decide sozinho a formatação de nada — ele é consultado
+pela ferramenta de conversão principal (que já usa regras de regex e
+tipografia sobre o texto real extraído), e só tem autoridade numa fatia
+específica do problema:
+
+| Situação | Quem decide |
+|---|---|
+| Header 3 ou inferior | A ferramenta principal — são texto real, a identificação tipográfica já é confiável. O inspetor **nem é consultado**. |
+| Callout de tribunal **já identificado** pelas regras de texto | A ferramenta principal — o inspetor não tem autoridade para mudar o que já foi identificado. |
+| Callout de tribunal **não identificado** pelas regras de texto | O inspetor — verifica se a moldura/cor da região bate com um padrão STF/STJ/TST salvo e preenche a lacuna (ou confirma que não é nada). |
+| Header 1 ou 2 | O inspetor tem autoridade plena para **homologar ou corrigir** o palpite da ferramenta principal. H1 e H2, neste modelo de documento, são sempre imagem — não têm texto selecionável nem metadado tipográfico, exatamente o ponto cego que a assinatura geométrica cobre. |
+
+Na prática, isso significa que `pattern_match` (ver `/inspect` abaixo) é o
+único sinal que o inspetor produz — bateu com um padrão salvo de categoria
+X, ou não bateu com nada (`null`). A ferramenta principal decide o que
+fazer com o `null` (deixar como estava, rebaixar, marcar para revisão);
+o inspetor não tenta adivinhar isso, porque só enxerga geometria e cor,
+nunca o texto em si.
+
 ## Uso
 
 Requer Python 3.9 ou superior. Nenhuma dependência de sistema é necessária
