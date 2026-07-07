@@ -17,14 +17,18 @@ edição do documento.
 ## Uso
 
 Requer Python 3.9 ou superior. Nenhuma dependência de sistema é necessária
-além do que está no `requirements.txt` — o PyMuPDF já embute o motor de
-renderização (não precisa de `poppler`, `ghostscript` etc.).
+além de Flask e PyMuPDF — o PyMuPDF já embute o motor de renderização (não
+precisa de `poppler`, `ghostscript` etc.).
 
 ```bash
-python -m venv .venv && source .venv/bin/activate  # opcional, mas recomendado
-pip install -r requirements.txt
 python server.py            # http://localhost:5000
 ```
+
+Não precisa instalar nada antes: o próprio `server.py` verifica se Flask e
+PyMuPDF estão presentes e, se não estiverem, instala sozinho (via
+`pip install`) antes de iniciar. Se preferir instalar manualmente ou usar
+um ambiente virtual, `pip install -r requirements.txt` continua funcionando
+normalmente.
 
 1. Envie o PDF pelo botão de upload.
 2. Navegue entre as páginas; ajuste o DPI de render se quiser mais zoom.
