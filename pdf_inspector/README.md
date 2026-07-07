@@ -43,6 +43,12 @@ normalmente.
 4. Escolha a categoria (H1/H2/STF/STJ/TST) e clique em **Salvar** para
    gravar esse padrão em `palette.json`. Salvar o mesmo padrão de novo não
    duplica a entrada.
+5. A seção **Padrões salvos**, embaixo, lista tudo que já está em
+   `palette.json` — agrupado por categoria e, dentro de cada grupo,
+   ordenado por data de criação (as entradas curadas manualmente, sem
+   data, aparecem primeiro). Ela carrega assim que a página abre, mesmo
+   sem PDF enviado. Marque uma ou mais entradas e clique em **Excluir
+   selecionados** para removê-las de `palette.json`.
 
 Se nada for encontrado na região exata, o backend expande a busca de
 moldura com uma margem de 2 pt antes de responder "nada encontrado" (o
@@ -66,6 +72,11 @@ POST /page/<n>/inspect                body: { "session_id": ..., "dpi": 150,
 POST /page/<n>/save                   mesmo corpo do /inspect, mais
                                       { "category": "H1"|"H2"|"STF"|"STJ"|"TST" }
                                       -> { "added": [...], "already_existed": bool }
+
+GET  /palette                         -> { "entries": [...] }  (todo o palette.json)
+
+POST /palette/delete                  body: { "ids": ["id1", "id2", ...] }
+                                      -> { "removed": int, "remaining": int }
 ```
 
 Resposta do `/inspect`:
@@ -84,14 +95,17 @@ Resposta do `/inspect`:
 ## palette.json
 
 Vive em `pdf_inspector/palette.json`, sempre nesta pasta (é o arquivo que o
-próprio `/save` lê e grava). Cada entrada tem `name`, `category` (uma de
-H1/H2/STF/STJ/TST — as entradas curadas iniciais não têm essa chave) e
-`type`:
+próprio `/save` lê e grava, e que `/palette/delete` edita). Cada entrada
+tem `id` (identificador estável, gerado na primeira leitura para entradas
+antigas que não tinham), `name`, `category` (uma de H1/H2/STF/STJ/TST — as
+entradas curadas iniciais não têm essa chave), `type` e `created_at`
+(ausente nas entradas curadas manualmente):
 
 ```json
 [
-  { "name": "header_band", "type": "image", "hash": "sha256..." },
-  { "name": "STJ_fill_11", "category": "STJ", "type": "color", "rgb": [0.94, 0.85, 0.69] }
+  { "id": "2bbca2266aff", "name": "header_band", "type": "image", "hash": "sha256..." },
+  { "id": "e62003594973", "name": "STJ_fill_11", "category": "STJ", "type": "color",
+    "rgb": [0.94, 0.85, 0.69], "created_at": "2026-07-07T12:12:53+00:00" }
 ]
 ```
 
