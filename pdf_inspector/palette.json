@@ -1,0 +1,56 @@
+[
+  {
+    "name": "header_band",
+    "type": "image",
+    "scope": "cabecalho",
+    "hash": "237a6535110d94dd9a819b98ecebde69316d86e9063d2a3d0ab772c81899e6ba",
+    "note": "Barra bege de fundo do cabeçalho, largura total da página. Reaparece idêntica em toda página de conteúdo (confirmado em 36/41 páginas do documento de referência). bbox típico (pt): [0, 0, 594.5, 49.3].",
+    "source_pdf": "Aula05PDFULLDireitoCivilTeoriaGeraldoNegocioJuridico.pdf",
+    "bbox_ref": [0.0, 0.0, 594.5, 49.3]
+  },
+  {
+    "name": "header_overlay",
+    "type": "image",
+    "scope": "cabecalho",
+    "hash": "9f35fc558440a3289fe2fe0fbdbcc240fc088d3ed80f0ffa0e23a8dd0f371b58",
+    "note": "Camada decorativa sobreposta à barra do cabeçalho (textura/padrão), à esquerda do logo. Também reaparece idêntica em toda página de conteúdo. bbox típico (pt): [-0.4, 9.2, 462.4, 41.0].",
+    "source_pdf": "Aula05PDFULLDireitoCivilTeoriaGeraldoNegocioJuridico.pdf",
+    "bbox_ref": [-0.4, 9.2, 462.4, 41.0]
+  },
+  {
+    "name": "jurisprudencia_stj_etiqueta_base",
+    "type": "image",
+    "scope": "bloco_jurisprudencia",
+    "hash": "a22e5c62a6f3c0c4a7185db3717d428043b4b54c78ccc4815d11ab609b6ce356",
+    "note": "Camada 1/3 (base/sombra) da etiqueta 'STJ' em forma de fita, fixada na margem esquerda ao lado do parágrafo de jurisprudência. Sempre acompanhada das camadas 'jurisprudencia_stj_etiqueta_corpo' e 'jurisprudencia_stj_etiqueta_texto' na mesma posição vertical. Confirmado idêntico em 6 ocorrências (páginas 21×2, 23, 30, 31, 34). bbox típico (pt): 84×35, x0 costuma ser negativo (sangra a margem da página).",
+    "source_pdf": "Aula05PDFULLDireitoCivilTeoriaGeraldoNegocioJuridico.pdf",
+    "size_ref": [84, 35]
+  },
+  {
+    "name": "jurisprudencia_stj_etiqueta_corpo",
+    "type": "image",
+    "scope": "bloco_jurisprudencia",
+    "hash": "9e43abda7fe36f78f39c52a8537ad79854e0e0012a4662df28f2b869f7ba94b8",
+    "note": "Camada 2/3 da etiqueta STJ. bbox típico (pt): 46×67, posicionada ~16pt à direita da camada base.",
+    "source_pdf": "Aula05PDFULLDireitoCivilTeoriaGeraldoNegocioJuridico.pdf",
+    "size_ref": [46, 67]
+  },
+  {
+    "name": "jurisprudencia_stj_etiqueta_texto",
+    "type": "image",
+    "scope": "bloco_jurisprudencia",
+    "hash": "84ea597d20d3ac4873dea2315b3357310cae1b66e994bb8d7a91dc3de3153ad4",
+    "note": "Camada 3/3 da etiqueta STJ (texto 'STJ' em si). bbox típico (pt): 58×67, posicionada ~11pt à direita da camada corpo.",
+    "source_pdf": "Aula05PDFULLDireitoCivilTeoriaGeraldoNegocioJuridico.pdf",
+    "size_ref": [58, 67]
+  },
+  {
+    "name": "jurisprudencia_marca_fechamento",
+    "type": "image",
+    "scope": "bloco_jurisprudencia",
+    "hash": "8ce01c710022b21a31140ef8b9b6bb648882bcf218e6a34bc022609721051e1a",
+    "note": "Traço/acento laranja que marca o fim visual da citação de jurisprudência, no lado direito da página, próximo ao fim do parágrafo. bbox típico (pt): 26×120, x0 ~528-538 (margem direita).",
+    "source_pdf": "Aula05PDFULLDireitoCivilTeoriaGeraldoNegocioJuridico.pdf",
+    "size_ref": [26, 120]
+  }
+]

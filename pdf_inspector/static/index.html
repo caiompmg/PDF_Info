@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Inspetor Geométrico de PDF</title>
+  <style>
+    :root {
+      --bg: #f5f6f8;
+      --panel: #ffffff;
+      --border: #d8dce2;
+      --accent: #3b5bdb;
+      --text: #1f2430;
+      --muted: #6b7280;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding: 10px 16px;
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+    }
+    header h1 { font-size: 15px; margin: 0 12px 0 0; font-weight: 600; }
+    button, input[type="file"]::file-selector-button {
+      font: inherit;
+      padding: 5px 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--panel);
+      cursor: pointer;
+    }
+    button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+    button:disabled { opacity: 0.45; cursor: default; }
+    #page-label { min-width: 90px; text-align: center; font-variant-numeric: tabular-nums; }
+    #status { color: var(--muted); font-size: 13px; }
+    main { flex: 1; display: flex; min-height: 0; }
+    #canvas-wrap {
+      flex: 1;
+      overflow: auto;
+      padding: 16px;
+    }
+    /* O canvas fica no tamanho exato do pixmap (sem escala CSS), para que
+       a conversão pixel -> ponto PDF seja a escala fixa 72/dpi. */
+    #page-canvas {
+      display: block;
+      background: #fff;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.18);
+      cursor: crosshair;
+    }
+    aside {
+      width: 420px;
+      flex-shrink: 0;
+      background: var(--panel);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+    aside .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    aside h2 { font-size: 13px; margin: 0; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+    #result {
+      flex: 1;
+      overflow: auto;
+      margin: 0;
+      padding: 14px;
+      font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+      font-size: 12.5px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    #swatches { display: flex; gap: 6px; flex-wrap: wrap; padding: 0 14px 12px; }
+    .swatch {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 3px 8px;
+      background: var(--bg);
+    }
+    .swatch .chip {
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+      border: 1px solid rgba(0,0,0,0.25);
+    }
+    .hint { color: var(--muted); }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Inspetor Geométrico de PDF</h1>
+    <input type="file" id="file-input" accept="application/pdf">
+    <button id="prev-page" disabled>&larr; Anterior</button>
+    <span id="page-label">&mdash;</span>
+    <button id="next-page" disabled>Próxima &rarr;</button>
+    <label>DPI
+      <select id="dpi-select">
+        <option>96</option>
+        <option selected>150</option>
+        <option>200</option>
+        <option>300</option>
+      </select>
+    </label>
+    <span id="status">Envie um PDF para começar.</span>
+  </header>
+  <main>
+    <div id="canvas-wrap">
+      <canvas id="page-canvas" width="0" height="0"></canvas>
+    </div>
+    <aside>
+      <div class="panel-head">
+        <h2>Inspeção</h2>
+        <button id="copy-btn" disabled>Copiar JSON</button>
+      </div>
+      <div id="swatches"></div>
+      <pre id="result" class="hint">Clique num ponto da página, ou arraste
+para selecionar uma região.
+
+O resultado mostra os desenhos vetoriais
+(cor de preenchimento, cor/espessura de
+borda, bbox) e imagens (hash SHA-256,
+bbox) encontrados ali, em pontos PDF.</pre>
+    </aside>
+  </main>
+  <script src="/static/inspector.js"></script>
+</body>
+</html>
