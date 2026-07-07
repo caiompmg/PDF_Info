@@ -16,7 +16,12 @@ edição do documento.
 
 ## Uso
 
+Requer Python 3.9 ou superior. Nenhuma dependência de sistema é necessária
+além do que está no `requirements.txt` — o PyMuPDF já embute o motor de
+renderização (não precisa de `poppler`, `ghostscript` etc.).
+
 ```bash
+python -m venv .venv && source .venv/bin/activate  # opcional, mas recomendado
 pip install -r requirements.txt
 python server.py            # http://localhost:5000
 ```
