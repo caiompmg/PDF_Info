@@ -18,14 +18,6 @@
     "bbox_ref": [-0.4, 9.2, 462.4, 41.0]
   },
   {
-    "name": "header_text_pattern",
-    "type": "text_region",
-    "scope": "cabecalho",
-    "note": "Não é imagem nem vetor — é texto real extraível via page.get_text(clip=...). Formato fixo: linha 1 = 'AULA <n>', linha 2 = '<DISCIPLINA>' (ex.: 'DIREITO CIVIL'). Região recortada válida em todas as páginas testadas (pt): clip=[0, 0, 300, 45].",
-    "clip_ref": [0.0, 0.0, 300.0, 45.0],
-    "regex": "^AULA\\s+\\d+\\s*\\n(.+)$"
-  },
-  {
     "name": "jurisprudencia_stj_etiqueta_base",
     "type": "image",
     "scope": "bloco_jurisprudencia",
@@ -60,12 +52,5 @@
     "note": "Traço/acento laranja que marca o fim visual da citação de jurisprudência, no lado direito da página, próximo ao fim do parágrafo. bbox típico (pt): 26×120, x0 ~528-538 (margem direita).",
     "source_pdf": "Aula05PDFULLDireitoCivilTeoriaGeraldoNegocioJuridico.pdf",
     "size_ref": [26, 120]
-  },
-  {
-    "name": "jurisprudencia_stj_citacao_pattern",
-    "type": "text_pattern",
-    "scope": "bloco_jurisprudencia",
-    "note": "Padrão textual da citação ao final do parágrafo de jurisprudência STJ, útil para detectar o bloco mesmo sem a etiqueta gráfica (ex.: se o PDF de origem não tiver as camadas de imagem). Exemplos reais encontrados: '(STJ. 3ª Turma. REsp 1905612-MA, Rel. Min. Ricardo Villas Bôas Cueva, julgado em 29/03/2022 - Info 731)'.",
-    "regex": "\\(?STJ\\.?\\s*\\d?ª?\\s*(Turma|Seção|Corte Especial)\\.?\\s*(REsp|AgInt|EREsp|AREsp)\\s*[\\d.\\-/A-Z]+.*?\\)"
   }
 ]
