@@ -1,29 +1,30 @@
 // Inspetor Geométrico de PDF — frontend.
-// Upload do PDF, render da página num canvas 1:1 com o pixmap do backend,
-// captura de clique/seleção e exibição do JSON de inspeção.
+// Upload do PDF, leitura por rolagem (todas as páginas empilhadas, cada
+// canvas 1:1 com o pixmap do backend), captura de clique/seleção por
+// página, e painel lateral com o resultado (moldura + cor de fundo) e o
+// botão de salvar a categoria escolhida em palette.json.
 
 "use strict";
 
 const fileInput = document.getElementById("file-input");
-const prevBtn = document.getElementById("prev-page");
-const nextBtn = document.getElementById("next-page");
-const pageLabel = document.getElementById("page-label");
 const dpiSelect = document.getElementById("dpi-select");
 const statusEl = document.getElementById("status");
-const canvas = document.getElementById("page-canvas");
-const ctx = canvas.getContext("2d");
+const canvasWrap = document.getElementById("canvas-wrap");
+const emptyHint = document.getElementById("empty-hint");
 const resultEl = document.getElementById("result");
 const swatchesEl = document.getElementById("swatches");
 const copyBtn = document.getElementById("copy-btn");
+const categorySelect = document.getElementById("category-select");
+const saveBtn = document.getElementById("save-btn");
+const saveStatusEl = document.getElementById("save-status");
 
 const state = {
   sessionId: null,
   numPages: 0,
-  page: 1,          // 1-based, igual à API
   dpi: 150,
-  pageImage: null,  // ImageBitmap da página renderizada
   lastJson: null,
-  drag: null,       // {x0, y0, x1, y1} em pixels do canvas, durante o arrasto
+  lastQuery: null,   // { page, body } usado para reenviar ao /save
+  drag: null,        // { pageBlock, x0, y0, x1, y1 } em pixels do canvas, durante o arrasto
 };
 
 // Distância mínima (px) para um arrasto contar como seleção e não clique.
@@ -55,39 +56,69 @@ async function uploadPdf(file) {
     const data = await fetchJson("/upload", { method: "POST", body: form });
     state.sessionId = data.session_id;
     state.numPages = data.num_pages;
-    state.page = 1;
-    setStatus(`"${file.name}" — ${data.num_pages} página(s).`);
-    await renderPage();
+    setStatus(`"${file.name}" — ${data.num_pages} página(s). Carregando…`);
+    await renderAllPages();
   } catch (err) {
     setStatus(`Falha no upload: ${err.message}`);
   }
 }
 
-async function renderPage() {
-  if (!state.sessionId) return;
+async function renderAllPages() {
   state.dpi = parseInt(dpiSelect.value, 10);
-  setStatus(`Renderizando página ${state.page}…`);
-  const url = `/page/${state.page}/render?dpi=${state.dpi}&session_id=${state.sessionId}`;
+  canvasWrap.innerHTML = "";
+  clearActivePage();
+  for (let pageNumber = 1; pageNumber <= state.numPages; pageNumber++) {
+    setStatus(`Carregando página ${pageNumber}/${state.numPages}…`);
+    try {
+      await renderOnePage(pageNumber);
+    } catch (err) {
+      setStatus(`Falha ao renderizar página ${pageNumber}: ${err.message}`);
+      return;
+    }
+  }
+  setStatus(`${state.numPages} página(s) @ ${state.dpi} dpi. Clique ou arraste sobre um bloco para inspecionar.`);
+}
+
+async function renderOnePage(pageNumber) {
+  const url = `/page/${pageNumber}/render?dpi=${state.dpi}&session_id=${state.sessionId}`;
   const response = await fetch(url);
   if (!response.ok) {
     const data = await response.json().catch(() => ({}));
-    setStatus(`Falha ao renderizar: ${data.error || response.status}`);
-    return;
+    throw new Error(data.error || String(response.status));
   }
   const bitmap = await createImageBitmap(await response.blob());
-  state.pageImage = bitmap;
+
+  const block = document.createElement("div");
+  block.className = "page-block";
+  block.dataset.page = String(pageNumber);
+
+  const label = document.createElement("div");
+  label.className = "page-label";
+  label.textContent = `Página ${pageNumber}`;
+
+  const canvas = document.createElement("canvas");
+  canvas.className = "page-canvas";
   canvas.width = bitmap.width;
   canvas.height = bitmap.height;
-  drawPage();
-  updatePager();
-  setStatus(`Página ${state.page}/${state.numPages} @ ${state.dpi} dpi ` +
-            `(${bitmap.width}×${bitmap.height}px). Clique ou arraste para inspecionar.`);
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(bitmap, 0, 0);
+  canvas._bitmap = bitmap;
+
+  attachCanvasEvents(canvas, block, pageNumber);
+
+  block.appendChild(label);
+  block.appendChild(canvas);
+  canvasWrap.appendChild(block);
 }
 
-function drawPage(selection) {
-  if (!state.pageImage) return;
+function clearActivePage() {
+  canvasWrap.querySelectorAll(".page-block.active").forEach((el) => el.classList.remove("active"));
+}
+
+function redrawPage(canvas, selection) {
+  const ctx = canvas.getContext("2d");
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.drawImage(state.pageImage, 0, 0);
+  ctx.drawImage(canvas._bitmap, 0, 0);
   if (selection) {
     const x = Math.min(selection.x0, selection.x1);
     const y = Math.min(selection.y0, selection.y1);
@@ -104,28 +135,64 @@ function drawPage(selection) {
   }
 }
 
-function updatePager() {
-  pageLabel.textContent = `${state.page} / ${state.numPages}`;
-  prevBtn.disabled = state.page <= 1;
-  nextBtn.disabled = state.page >= state.numPages;
-}
-
-function canvasPos(event) {
+function canvasPos(canvas, event) {
   const rect = canvas.getBoundingClientRect();
   return { x: event.clientX - rect.left, y: event.clientY - rect.top };
 }
 
-async function inspect(body) {
+function attachCanvasEvents(canvas, block, pageNumber) {
+  canvas.addEventListener("mousedown", (event) => {
+    const { x, y } = canvasPos(canvas, event);
+    state.drag = { canvas, block, pageNumber, x0: x, y0: y, x1: x, y1: y };
+  });
+
+  canvas.addEventListener("mousemove", (event) => {
+    if (!state.drag || state.drag.canvas !== canvas) return;
+    const { x, y } = canvasPos(canvas, event);
+    state.drag.x1 = x;
+    state.drag.y1 = y;
+    redrawPage(canvas, state.drag);
+  });
+}
+
+window.addEventListener("mouseup", () => {
+  const drag = state.drag;
+  if (!drag) return;
+  state.drag = null;
+  redrawPage(drag.canvas, null);
+
+  clearActivePage();
+  drag.block.classList.add("active");
+
+  const dx = Math.abs(drag.x1 - drag.x0);
+  const dy = Math.abs(drag.y1 - drag.y0);
+  const body = dx < CLICK_THRESHOLD_PX && dy < CLICK_THRESHOLD_PX
+    ? { x: pxToPt(drag.x0), y: pxToPt(drag.y0) }
+    : {
+        x0: pxToPt(Math.min(drag.x0, drag.x1)),
+        y0: pxToPt(Math.min(drag.y0, drag.y1)),
+        x1: pxToPt(Math.max(drag.x0, drag.x1)),
+        y1: pxToPt(Math.max(drag.y0, drag.y1)),
+      };
+  inspect(drag.pageNumber, body);
+});
+
+async function inspect(pageNumber, body) {
   body.session_id = state.sessionId;
+  body.dpi = state.dpi;
+  saveBtn.disabled = true;
+  saveStatusEl.textContent = "";
   setStatus("Inspecionando…");
   try {
-    const data = await fetchJson(`/page/${state.page}/inspect`, {
+    const data = await fetchJson(`/page/${pageNumber}/inspect`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
     });
+    state.lastQuery = { page: pageNumber, body };
     showResult(data);
-    setStatus(`Página ${state.page}/${state.numPages} @ ${state.dpi} dpi.`);
+    saveBtn.disabled = false;
+    setStatus(`${state.numPages} página(s) @ ${state.dpi} dpi.`);
   } catch (err) {
     setStatus(`Falha na inspeção: ${err.message}`);
   }
@@ -141,28 +208,50 @@ function showResult(data) {
 
 function renderSwatches(data) {
   swatchesEl.innerHTML = "";
-  for (const vec of data.vectors || []) {
-    for (const [label, rgb] of [["fill", vec.fill_rgb], ["stroke", vec.stroke_rgb]]) {
-      if (!rgb) continue;
-      const css = `rgb(${rgb.map((v) => Math.round(v * 255)).join(",")})`;
-      const el = document.createElement("span");
-      el.className = "swatch";
-      const chip = document.createElement("span");
-      chip.className = "chip";
-      chip.style.background = css;
-      el.appendChild(chip);
-      el.appendChild(document.createTextNode(
-        `${label} (${rgb.join(", ")})${vec.palette_match ? " = " + vec.palette_match : ""}`
-      ));
-      swatchesEl.appendChild(el);
-    }
-  }
-  for (const img of data.images || []) {
+  const fc = data.fill_color;
+  if (fc) {
+    const css = `rgb(${fc.rgb.map((v) => Math.round(v * 255)).join(",")})`;
     const el = document.createElement("span");
     el.className = "swatch";
-    el.textContent = `img ${img.width}×${img.height} ${img.hash.slice(0, 12)}…` +
+    const chip = document.createElement("span");
+    chip.className = "chip";
+    chip.style.background = css;
+    el.appendChild(chip);
+    el.appendChild(document.createTextNode(
+      `fundo ${fc.hex}${fc.palette_match ? " = " + fc.palette_match : ""}`
+    ));
+    swatchesEl.appendChild(el);
+  }
+  for (const img of data.frame || []) {
+    const el = document.createElement("span");
+    el.className = "swatch";
+    el.textContent = `moldura ${img.width}×${img.height} ${img.hash.slice(0, 12)}…` +
       (img.palette_match ? ` = ${img.palette_match}` : "");
     swatchesEl.appendChild(el);
+  }
+}
+
+async function saveEntry() {
+  if (!state.lastQuery) return;
+  const { page, body } = state.lastQuery;
+  const category = categorySelect.value;
+  saveBtn.disabled = true;
+  saveStatusEl.textContent = "Salvando…";
+  try {
+    const data = await fetchJson(`/page/${page}/save`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ...body, category }),
+    });
+    saveStatusEl.textContent = data.already_existed
+      ? `Esse padrão já estava salvo em ${category}.`
+      : `Salvo em ${category}: ${data.added.length} entrada(s) nova(s) em palette.json.`;
+    saveStatusEl.style.color = "var(--ok)";
+  } catch (err) {
+    saveStatusEl.textContent = `Falha ao salvar: ${err.message}`;
+    saveStatusEl.style.color = "#c92a2a";
+  } finally {
+    saveBtn.disabled = false;
   }
 }
 
@@ -170,51 +259,17 @@ function renderSwatches(data) {
 
 fileInput.addEventListener("change", () => {
   const file = fileInput.files[0];
-  if (file) uploadPdf(file);
-});
-
-prevBtn.addEventListener("click", () => {
-  if (state.page > 1) { state.page -= 1; renderPage(); }
-});
-
-nextBtn.addEventListener("click", () => {
-  if (state.page < state.numPages) { state.page += 1; renderPage(); }
-});
-
-dpiSelect.addEventListener("change", () => renderPage());
-
-canvas.addEventListener("mousedown", (event) => {
-  if (!state.sessionId || !state.pageImage) return;
-  const { x, y } = canvasPos(event);
-  state.drag = { x0: x, y0: y, x1: x, y1: y };
-});
-
-canvas.addEventListener("mousemove", (event) => {
-  if (!state.drag) return;
-  const { x, y } = canvasPos(event);
-  state.drag.x1 = x;
-  state.drag.y1 = y;
-  drawPage(state.drag);
-});
-
-window.addEventListener("mouseup", (event) => {
-  if (!state.drag) return;
-  const drag = state.drag;
-  state.drag = null;
-  drawPage();
-  const dx = Math.abs(drag.x1 - drag.x0);
-  const dy = Math.abs(drag.y1 - drag.y0);
-  if (dx < CLICK_THRESHOLD_PX && dy < CLICK_THRESHOLD_PX) {
-    inspect({ x: pxToPt(drag.x0), y: pxToPt(drag.y0) });
-  } else {
-    inspect({
-      x0: pxToPt(Math.min(drag.x0, drag.x1)),
-      y0: pxToPt(Math.min(drag.y0, drag.y1)),
-      x1: pxToPt(Math.max(drag.x0, drag.x1)),
-      y1: pxToPt(Math.max(drag.y0, drag.y1)),
-    });
+  if (file) {
+    emptyHint.remove();
+    uploadPdf(file);
   }
 });
+
+dpiSelect.addEventListener("change", () => {
+  if (state.sessionId) renderAllPages();
+});
+
+saveBtn.addEventListener("click", saveEntry);
 
 copyBtn.addEventListener("click", async () => {
   if (!state.lastJson) return;

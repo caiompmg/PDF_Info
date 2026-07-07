@@ -1,8 +1,12 @@
 """Inspetor Geométrico de PDF — backend.
 
-Ferramenta isolada de leitura/inspeção: abre um PDF, renderiza páginas e
-retorna dados estruturais objetivos (cor de preenchimento, cor/espessura de
-borda, bounding box, hash SHA-256 de imagens) da região clicada/selecionada.
+Ferramenta isolada de leitura/inspeção: abre um PDF e, ao clicar/selecionar
+uma região, identifica dois padrões objetivos daquele ponto — a moldura
+estilizada (imagens de borda/etiqueta reaproveitadas, por hash SHA-256) e a
+cor de preenchimento de fundo do bloco (amostrada do próprio render, já
+composta com qualquer opacidade/gradiente). Serve para marcar blocos como
+H1, H2, STF, STJ ou TST e consolidar esses padrões em palette.json, para uso
+por outra ferramenta de formatação.
 
 Fora de escopo: OCR, formatação, edição do documento, qualquer chamada a IA.
 
@@ -19,6 +23,8 @@ import json
 import subprocess
 import sys
 import uuid
+from collections import Counter
+from io import BytesIO
 from pathlib import Path
 
 
@@ -43,59 +49,63 @@ from flask import Flask, abort, jsonify, request, send_file, send_from_directory
 
 BASE_DIR = Path(__file__).resolve().parent
 STATIC_DIR = BASE_DIR / "static"
+PALETTE_PATH = BASE_DIR / "palette.json"
+
+# Categorias que o painel de inspeção permite atribuir a um bloco.
+CATEGORIES = ("H1", "H2", "STF", "STJ", "TST")
 
 # Tolerância por canal (0-1) ao comparar cores com o palette.json.
 COLOR_TOLERANCE = 0.02
-# Margem (em pontos PDF) usada para expandir a busca quando nada é
-# encontrado na região exata.
+# Margem (em pontos PDF) usada para expandir a busca de moldura quando nada
+# é encontrado na região exata.
 SEARCH_MARGIN_PT = 2.0
+# Recuo (em pontos PDF) a partir das bordas de uma seleção ao amostrar a cor
+# de fundo, para não pegar a própria moldura/borda decorativa.
+FILL_SAMPLE_INSET_PT = 3.0
 
 app = Flask(__name__, static_folder=None)
 app.config["MAX_CONTENT_LENGTH"] = 100 * 1024 * 1024  # 100 MB
 
-# Documentos abertos, por sessão. Ferramenta local de uso individual:
-# manter em memória é suficiente e evita escrever o PDF em disco.
-SESSIONS: dict[str, fitz.Document] = {}
+# Sessões por upload: {"doc": fitz.Document, "filename": str}. Ferramenta
+# local de uso individual: manter em memória é suficiente.
+SESSIONS: dict[str, dict] = {}
 
 
 def load_palette() -> list[dict]:
-    """Carrega o palette.json conhecido, se existir (raiz do repo ou aqui).
+    """Carrega o palette.json de trabalho (sempre o desta pasta).
 
-    Cada entrada esperada: {"name": ..., "rgb": [r,g,b], ...} para vetores
-    ou {"name": ..., "hash": "sha256...", ...} para imagens. Entradas em
-    outros formatos são ignoradas sem erro.
+    Cada entrada tem "name", "category" (uma de CATEGORIES) e "type"
+    ("image", com "hash", ou "color", com "rgb"). Formato inválido é
+    ignorado sem erro (arquivo começa vazio na primeira vez).
     """
-    for candidate in (BASE_DIR / "palette.json", BASE_DIR.parent / "palette.json"):
-        if candidate.is_file():
-            try:
-                data = json.loads(candidate.read_text(encoding="utf-8"))
-            except (OSError, json.JSONDecodeError):
-                continue
-            if isinstance(data, list):
-                return data
-            if isinstance(data, dict):
-                # aceita também {"nome": {...}, ...}
-                return [{"name": k, **v} for k, v in data.items() if isinstance(v, dict)]
-    return []
+    if not PALETTE_PATH.is_file():
+        return []
+    try:
+        data = json.loads(PALETTE_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return []
+    return data if isinstance(data, list) else []
+
+
+def save_palette(entries: list[dict]) -> None:
+    PALETTE_PATH.write_text(
+        json.dumps(entries, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"
+    )
 
 
 PALETTE = load_palette()
 
 
-def match_color(rgb, palette=None, tolerance=COLOR_TOLERANCE):
-    """Retorna o nome da entrada do palette cuja cor bate com `rgb`.
-
-    Comparação por canal com tolerância fixa; None se não houver match.
-    """
+def match_color(rgb, tolerance=COLOR_TOLERANCE):
+    """Retorna o nome da entrada do palette cuja cor bate com `rgb`."""
     if rgb is None:
         return None
-    entries = PALETTE if palette is None else palette
-    for entry in entries:
+    for entry in PALETTE:
         ref = entry.get("rgb")
         if not ref or len(ref) != len(rgb):
             continue
         if all(abs(a - b) <= tolerance for a, b in zip(rgb, ref)):
-            return entry.get("name") or entry.get("type")
+            return entry.get("name")
     return None
 
 
@@ -103,25 +113,19 @@ def match_image_hash(sha256_hex):
     """Retorna o nome da entrada do palette com o mesmo hash de imagem."""
     for entry in PALETTE:
         if entry.get("hash") == sha256_hex:
-            return entry.get("name") or entry.get("type")
+            return entry.get("name")
     return None
 
 
-def normalize_color(color):
-    """Converte a cor do get_drawings() para lista RGB [0-1] arredondada."""
-    if color is None:
-        return None
-    values = list(color)
-    if len(values) == 1:  # tom de cinza
-        values = values * 3
-    return [round(v, 4) for v in values[:3]]
+def get_session(session_id: str) -> dict:
+    session = SESSIONS.get(session_id or "")
+    if session is None:
+        abort(404, description="Sessão não encontrada. Envie o PDF novamente.")
+    return session
 
 
 def get_document(session_id: str) -> fitz.Document:
-    doc = SESSIONS.get(session_id or "")
-    if doc is None:
-        abort(404, description="Sessão não encontrada. Envie o PDF novamente.")
-    return doc
+    return get_session(session_id)["doc"]
 
 
 def get_page(doc: fitz.Document, page_number: int) -> fitz.Page:
@@ -129,6 +133,34 @@ def get_page(doc: fitz.Document, page_number: int) -> fitz.Page:
     if not 1 <= page_number <= doc.page_count:
         abort(404, description=f"Página {page_number} fora do intervalo (1-{doc.page_count}).")
     return doc[page_number - 1]
+
+
+def parse_target(body: dict) -> fitz.Rect:
+    """Lê {x, y} (clique) ou {x0, y0, x1, y1} (seleção) do corpo, em pontos PDF."""
+    if all(k in body for k in ("x0", "y0", "x1", "y1")):
+        try:
+            target = fitz.Rect(body["x0"], body["y0"], body["x1"], body["y1"])
+        except (TypeError, ValueError):
+            abort(400, description="Coordenadas de seleção inválidas.")
+        target.normalize()
+        return target
+    if "x" in body and "y" in body:
+        try:
+            x, y = float(body["x"]), float(body["y"])
+        except (TypeError, ValueError):
+            abort(400, description="Coordenadas de clique inválidas.")
+        return fitz.Rect(x, y, x, y)
+    abort(400, description="Informe {x, y} ou {x0, y0, x1, y1} em pontos PDF.")
+
+
+def parse_dpi(body: dict) -> int:
+    try:
+        dpi = int(body.get("dpi", 150))
+    except (TypeError, ValueError):
+        abort(400, description="dpi inválido.")
+    if not 36 <= dpi <= 600:
+        abort(400, description="dpi fora do intervalo permitido (36-600).")
+    return dpi
 
 
 def region_hits(rect: fitz.Rect, target: fitz.Rect) -> bool:
@@ -143,35 +175,10 @@ def region_hits(rect: fitz.Rect, target: fitz.Rect) -> bool:
     return rect.intersects(target)
 
 
-def collect_vectors(page: fitz.Page, target: fitz.Rect) -> list[dict]:
-    """Desenhos vetoriais cujo rect intersecta a região alvo.
-
-    Resposta já no formato que o palette.json espera para vetores
-    ({"rgb": [...]}) — ver Fase 2 da spec.
-    """
-    results = []
-    for drawing in page.get_drawings():
-        if not region_hits(drawing["rect"], target):
-            continue
-        rect = drawing["rect"]
-        fill = normalize_color(drawing.get("fill"))
-        stroke = normalize_color(drawing.get("color"))
-        width = drawing.get("width")
-        results.append(
-            {
-                "fill_rgb": fill,
-                "stroke_rgb": stroke,
-                "stroke_width": round(width, 4) if width is not None else None,
-                "bbox": [round(v, 2) for v in rect],
-                "palette_match": match_color(fill),
-            }
-        )
-    return results
-
-
-def collect_images(doc: fitz.Document, page: fitz.Page, target: fitz.Rect) -> list[dict]:
-    """Imagens cujo rect intersecta a região alvo, com hash SHA-256 dos bytes
-    originais (estável entre páginas/PDFs que embutem a mesma imagem)."""
+def collect_frame(doc: fitz.Document, page: fitz.Page, target: fitz.Rect) -> list[dict]:
+    """Imagens (molduras/etiquetas estilizadas) cujo rect intersecta a
+    região alvo, identificadas por hash SHA-256 dos bytes originais —
+    estável entre páginas/PDFs que reaproveitam a mesma arte."""
     results = []
     seen = set()
     for image_info in page.get_images(full=True):
@@ -197,6 +204,72 @@ def collect_images(doc: fitz.Document, page: fitz.Page, target: fitz.Rect) -> li
     return results
 
 
+def sample_pixel(page: fitz.Page, x: float, y: float, dpi: int):
+    """Lê a cor renderizada (já composta: opacidade, gradiente etc.) num
+    único ponto do PDF, sem redesenhar a página inteira."""
+    if not page.rect.contains(fitz.Point(x, y)):
+        return None
+    clip = fitz.Rect(x - 0.5, y - 0.5, x + 0.5, y + 0.5)
+    pixmap = page.get_pixmap(dpi=dpi, clip=clip)
+    if pixmap.width == 0 or pixmap.height == 0:
+        return None
+    color = pixmap.pixel(pixmap.width // 2, pixmap.height // 2)
+    return tuple(round(c / 255, 3) for c in color[:3])
+
+
+def sample_fill_color(page: fitz.Page, target: fitz.Rect, dpi: int) -> list[float] | None:
+    """Amostra a cor de fundo do bloco: centro + um anel de 8 pontos ao
+    redor, usando a cor mais frequente entre as amostras como defesa
+    contra cair em cima de texto — vale tanto para um clique pontual
+    (raio fixo pequeno) quanto para uma seleção arrastada (raio baseado
+    no tamanho do retângulo, recuado para não pegar a moldura)."""
+    cx = (target.x0 + target.x1) / 2
+    cy = (target.y0 + target.y1) / 2
+    if target.width > 2 * FILL_SAMPLE_INSET_PT and target.height > 2 * FILL_SAMPLE_INSET_PT:
+        radius = min(target.width, target.height) / 2 - FILL_SAMPLE_INSET_PT
+    else:
+        radius = FILL_SAMPLE_INSET_PT
+    ring_offsets = [(0, 0), (-radius, 0), (radius, 0), (0, -radius), (0, radius),
+                    (-radius, -radius), (radius, -radius), (-radius, radius), (radius, radius)]
+    points = [(cx + dx, cy + dy) for dx, dy in ring_offsets]
+    samples = [c for c in (sample_pixel(page, px, py, dpi) for px, py in points) if c is not None]
+    if not samples:
+        return None
+    most_common = Counter(samples).most_common(1)[0][0]
+    return list(most_common)
+
+
+def is_near_white(rgb, tolerance=0.03) -> bool:
+    return rgb is not None and all(v >= 1 - tolerance for v in rgb)
+
+
+def inspect_region(doc: fitz.Document, page: fitz.Page, target: fitz.Rect, dpi: int) -> dict:
+    """Núcleo compartilhado por /inspect e /save: encontra a moldura
+    (imagens) e a cor de fundo de uma região."""
+    frame = collect_frame(doc, page, target)
+    expanded = False
+    if not frame:
+        expanded_target = fitz.Rect(target) + (
+            -SEARCH_MARGIN_PT,
+            -SEARCH_MARGIN_PT,
+            SEARCH_MARGIN_PT,
+            SEARCH_MARGIN_PT,
+        )
+        frame = collect_frame(doc, page, expanded_target)
+        expanded = bool(frame)
+
+    fill_rgb = sample_fill_color(page, target, dpi)
+    fill_color = None
+    if fill_rgb is not None:
+        fill_color = {
+            "rgb": fill_rgb,
+            "hex": "#{:02x}{:02x}{:02x}".format(*(round(v * 255) for v in fill_rgb)),
+            "palette_match": match_color(fill_rgb),
+        }
+
+    return {"frame": frame, "fill_color": fill_color, "expanded_by_margin": expanded}
+
+
 @app.get("/")
 def index():
     return send_from_directory(STATIC_DIR, "index.html")
@@ -218,7 +291,7 @@ def upload():
     except Exception:
         abort(400, description="Arquivo não pôde ser aberto como PDF.")
     session_id = uuid.uuid4().hex
-    SESSIONS[session_id] = doc
+    SESSIONS[session_id] = {"doc": doc, "filename": file.filename}
     return jsonify({"session_id": session_id, "num_pages": doc.page_count})
 
 
@@ -226,76 +299,91 @@ def upload():
 def render_page(page_number):
     doc = get_document(request.args.get("session_id"))
     page = get_page(doc, page_number)
-    try:
-        dpi = int(request.args.get("dpi", 150))
-    except ValueError:
-        abort(400, description="dpi inválido.")
-    if not 36 <= dpi <= 600:
-        abort(400, description="dpi fora do intervalo permitido (36-600).")
+    dpi = parse_dpi(request.args)
     pixmap = page.get_pixmap(dpi=dpi)
-    from io import BytesIO
-
     return send_file(BytesIO(pixmap.tobytes("png")), mimetype="image/png")
 
 
 @app.post("/page/<int:page_number>/inspect")
 def inspect(page_number):
     body = request.get_json(silent=True) or {}
-    doc = get_document(body.get("session_id") or request.args.get("session_id"))
+    doc = get_document(body.get("session_id"))
     page = get_page(doc, page_number)
+    target = parse_target(body)
+    dpi = parse_dpi(body)
 
-    # Aceita {x, y} (clique) ou {x0, y0, x1, y1} (seleção), em pontos PDF.
-    if all(k in body for k in ("x0", "y0", "x1", "y1")):
-        try:
-            target = fitz.Rect(body["x0"], body["y0"], body["x1"], body["y1"])
-        except (TypeError, ValueError):
-            abort(400, description="Coordenadas de seleção inválidas.")
-        target.normalize()
-    elif "x" in body and "y" in body:
-        try:
-            x, y = float(body["x"]), float(body["y"])
-        except (TypeError, ValueError):
-            abort(400, description="Coordenadas de clique inválidas.")
-        target = fitz.Rect(x, y, x, y)
-    else:
-        abort(400, description="Informe {x, y} ou {x0, y0, x1, y1} em pontos PDF.")
-
-    vectors = collect_vectors(page, target)
-    images = collect_images(doc, page, target)
-    expanded = False
-    if not vectors and not images:
-        # Nada na região exata: expande a busca com uma margem pequena
-        # antes de responder "nada encontrado".
-        target = fitz.Rect(target) + (
-            -SEARCH_MARGIN_PT,
-            -SEARCH_MARGIN_PT,
-            SEARCH_MARGIN_PT,
-            SEARCH_MARGIN_PT,
-        )
-        vectors = collect_vectors(page, target)
-        images = collect_images(doc, page, target)
-        expanded = True
-
-    # Amostra de texto sempre com uma margem mínima, senão um clique
-    # pontual (rect degenerado) não recorta nada.
-    text_clip = fitz.Rect(target)
-    if text_clip.width < SEARCH_MARGIN_PT or text_clip.height < SEARCH_MARGIN_PT:
-        text_clip += (-SEARCH_MARGIN_PT, -SEARCH_MARGIN_PT, SEARCH_MARGIN_PT, SEARCH_MARGIN_PT)
-    text_sample = page.get_text(clip=text_clip).strip()
-
+    result = inspect_region(doc, page, target, dpi)
     response = {
         "query": {
             "page": page_number,
             "rect": [round(v, 2) for v in target],
-            "expanded_by_margin": expanded,
+            "expanded_by_margin": result["expanded_by_margin"],
         },
-        "vectors": vectors,
-        "images": images,
-        "text_sample": text_sample,
+        "frame": result["frame"],
+        "fill_color": result["fill_color"],
     }
-    if not vectors and not images and not text_sample:
+    if not result["frame"] and is_near_white(result["fill_color"]["rgb"] if result["fill_color"] else None):
         response["message"] = "Nada encontrado nesta região (mesmo com margem de busca)."
     return jsonify(response)
+
+
+@app.post("/page/<int:page_number>/save")
+def save_entry(page_number):
+    body = request.get_json(silent=True) or {}
+    session = get_session(body.get("session_id"))
+    doc, filename = session["doc"], session["filename"]
+    page = get_page(doc, page_number)
+    target = parse_target(body)
+    dpi = parse_dpi(body)
+
+    category = body.get("category")
+    if category not in CATEGORIES:
+        abort(400, description=f"category deve ser um de {', '.join(CATEGORIES)}.")
+
+    result = inspect_region(doc, page, target, dpi)
+    added = []
+
+    for image in result["frame"]:
+        already = any(e.get("category") == category and e.get("hash") == image["hash"] for e in PALETTE)
+        if already:
+            continue
+        entry = {
+            "name": f"{category}_frame_{len(PALETTE) + len(added) + 1}",
+            "category": category,
+            "type": "image",
+            "hash": image["hash"],
+            "size_ref": [image["width"], image["height"]],
+            "source_pdf": filename,
+            "page": page_number,
+        }
+        PALETTE.append(entry)
+        added.append(entry)
+
+    fill_color = result["fill_color"]
+    if fill_color is not None and not is_near_white(fill_color["rgb"]):
+        already = any(
+            e.get("category") == category
+            and e.get("type") == "color"
+            and e.get("rgb")
+            and all(abs(a - b) <= COLOR_TOLERANCE for a, b in zip(e["rgb"], fill_color["rgb"]))
+            for e in PALETTE
+        )
+        if not already:
+            entry = {
+                "name": f"{category}_fill_{len(PALETTE) + len(added) + 1}",
+                "category": category,
+                "type": "color",
+                "rgb": fill_color["rgb"],
+                "source_pdf": filename,
+                "page": page_number,
+            }
+            PALETTE.append(entry)
+            added.append(entry)
+
+    if added:
+        save_palette(PALETTE)
+
+    return jsonify({"added": added, "already_existed": not added})
 
 
 @app.errorhandler(400)
